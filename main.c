@@ -4,12 +4,7 @@
 
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_font.h>
-#include <allegro5/color.h>
-#include <allegro5/display.h>
-#include <allegro5/drawing.h>
-#include <allegro5/events.h>
-#include <allegro5/keyboard.h>
-#include <allegro5/timer.h>
+#include "player.h"
 
 int main(int argc, char* argv[])
 {
