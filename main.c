@@ -6,6 +6,8 @@
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
 #include "player.h"
 
 #define TRUE 1
@@ -21,6 +23,8 @@ int main(int argc, char* argv[])
    al_init_font_addon();
    al_init_image_addon();
    al_install_keyboard();
+   al_install_audio();
+   al_init_acodec_addon();
 
    // Criação dos elementos do jogo
    ALLEGRO_TIMER* timer = al_create_timer(1.0 / 30.0);
@@ -40,11 +44,19 @@ int main(int argc, char* argv[])
    ALLEGRO_BITMAP* icon_display = al_load_bitmap("./assets/icon.png");
    al_set_display_icon(display, icon_display);
 
-   /* --------------------- 
-   *     Menu Inicial 
-   --------------------- */
+   /* --------------------------------------------------------------------------
+   *  MENU INICIAL
+   ---------------------------------------------------------------------------*/
+   // Imagens do Menu
    ALLEGRO_BITMAP* logo_menu = al_load_bitmap("./assets/logo_menu.png");
+   // Fonte usada no Menu
    ALLEGRO_FONT* font = al_load_ttf_font("./assets/font/upheaval.ttf", 14, 0);
+   // Música do Menu
+   al_reserve_samples(1);
+   ALLEGRO_SAMPLE* menu_music = al_load_sample("./assets/music/menu.mp3");
+   ALLEGRO_SAMPLE_ID menu_music_id;
+   al_play_sample(menu_music, 0.25, 0.0, 1.0, ALLEGRO_PLAYMODE_LOOP, &menu_music_id);
+
    unsigned short transp = 0;
    while (TRUE)
    {
@@ -73,9 +85,11 @@ int main(int argc, char* argv[])
       al_flip_display();
    }
 
-   /* --------------------- 
-   *  Configuração da Luta 
-   --------------------- */
+   al_stop_sample(&menu_music_id); // Interrompe a música do Menu
+
+   /* --------------------------------------------------------------------------
+   *  CONFIGURAÇÃO DA LUTA
+   ---------------------------------------------------------------------------*/
    ALLEGRO_BITMAP* personagem = al_load_bitmap("./assets/characters/ryu/idle.png");
    ALLEGRO_BITMAP* fundo = al_load_bitmap("./assets/background/one_piece.jpg");
    int pos_x = 100, pos_y = 200;
@@ -84,12 +98,15 @@ int main(int argc, char* argv[])
    {
       al_wait_for_event(event_queue, &event);
 
+      // Clicar no X -> Fecha o jogo
       if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) break;
+
+      // Tecla ESC -> Pausa o jogo
       if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE){
-         do { 
-            al_wait_for_event(event_queue, &event); 
-            if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) break;
-         } while (event.keyboard.keycode != ALLEGRO_KEY_ESCAPE);
+         do
+            al_wait_for_event(event_queue, &event);
+         while (event.keyboard.keycode != ALLEGRO_KEY_ESCAPE && event.type != ALLEGRO_EVENT_DISPLAY_CLOSE);
+         if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) break;
          continue;
       }
 
@@ -121,11 +138,12 @@ int main(int argc, char* argv[])
       al_flip_display();
    }
 
-   /* Destruição de todos os bitmaps */
+   // Destruição de todos os bitmaps
    al_destroy_bitmap(icon_display);
    al_destroy_bitmap(personagem);
+   al_destroy_bitmap(fundo);
 
-   /* Destruição dos elementos do jogo */
+   // Destruição dos elementos do jogo
    al_destroy_font(font);
    al_destroy_display(display);
    al_destroy_timer(timer);

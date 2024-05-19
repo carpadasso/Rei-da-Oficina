@@ -1,6 +1,6 @@
 #include <allegro5/allegro5.h>
 
-#define DISPLAY_WIDTH 800
+#define DISPLAY_WIDTH  800
 #define DISPLAY_HEIGHT 600
 
 typedef struct {
