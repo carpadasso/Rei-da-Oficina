@@ -86,7 +86,10 @@ int main(int argc, char* argv[])
 
       if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) break;
       if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE){
-         do { al_wait_for_event(event_queue, &event); } while (event.keyboard.keycode != ALLEGRO_KEY_ESCAPE);
+         do { 
+            al_wait_for_event(event_queue, &event); 
+            if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) break;
+         } while (event.keyboard.keycode != ALLEGRO_KEY_ESCAPE);
          continue;
       }
 
