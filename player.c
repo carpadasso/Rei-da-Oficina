@@ -2,7 +2,15 @@
 #include <stdlib.h>
 #include "player.h"
 
-Player* createPlayer(unsigned short charSelect, unsigned short xInit, unsigned short yInit, unsigned short max_x, unsigned short max_y)
+Player create_player(Character char_selected, unsigned short x, unsigned short y, unsigned short w, unsigned short h)
 {
-   return NULL;
+   Player jogador;
+
+   jogador.selected_char = char_selected;
+   jogador.current_position_x = x;
+   jogador.current_position_y = y;
+   jogador.current_lenght = w;
+   jogador.current_height = h;
+
+   return jogador;
 }
