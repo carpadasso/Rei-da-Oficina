@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
    *  CONFIGURAÇÃO DA LUTA
    ---------------------------------------------------------------------------*/
    Player* player_01 = create_player(RYU, 10, DISPLAY_HEIGHT - 10, 70, 95);
-   Player* player_02 = create_player(KEN, DISPLAY_WIDTH - 80, DISPLAY_HEIGHT - 10, 70, 95);
+   Player* player_02 = create_player(CHUNLI, DISPLAY_WIDTH - 80, DISPLAY_HEIGHT - 10, 70, 95);
    ALLEGRO_BITMAP* ryu = al_load_bitmap("./assets/characters/ryu/idle.png");
    ALLEGRO_BITMAP* fundo = al_load_bitmap("./assets/background/ryu_stage.png");
 

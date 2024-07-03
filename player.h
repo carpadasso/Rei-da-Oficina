@@ -21,7 +21,7 @@ enum
 /* Define constantes para cada personagem */
 typedef enum { 
    RYU,
-   KEN 
+   CHUNLI
 } Character;
 
 /* Define a estrutura "Player"
