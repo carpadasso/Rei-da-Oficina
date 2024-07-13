@@ -23,10 +23,11 @@ void update_player_position(Player* p1, Player* p2)
 
 int main(int argc, char* argv[])
 {
-   // Variáveis de uso geral
+   /* Variáveis de uso geral */
    ALLEGRO_EVENT event;
+   bool closeGame = false;
 
-   // Inits necessários
+   /* Inits necessários */
    al_init();                  // Carregamento da biblioteca padrão Allegro
    al_init_font_addon();       // Carregamento da biblioteca de fontes
    al_init_ttf_addon();        // Carregamento da biblioteca de fontes .ttf
@@ -36,20 +37,20 @@ int main(int argc, char* argv[])
    al_init_acodec_addon();     // Carregamento da biblioteca de formatos de áudio
    al_init_primitives_addon(); // Carregamento da biblioteca de primitivos
 
-   // Criação dos elementos do jogo
+   /* Criação dos elementos do jogo */
    ALLEGRO_TIMER* timer = al_create_timer(1.0 / REFRESH_RATE);
    ALLEGRO_EVENT_QUEUE* event_queue = al_create_event_queue();
    ALLEGRO_DISPLAY* display = al_create_display(DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
-   // Registro de fontes de eventos para a Event Queue
+   /* Registro de fontes de eventos para a Event Queue */
    al_register_event_source(event_queue, al_get_keyboard_event_source());
    al_register_event_source(event_queue, al_get_display_event_source(display));
    al_register_event_source(event_queue, al_get_timer_event_source(timer));
    
-   // Começa o Timer
+   /* Começa o Timer */
    al_start_timer(timer);
    
-   // Altera o título e ícone do display aberto
+   /* Altera o título e ícone do display aberto */
    al_set_window_title(display, "Street Fighter II: Champion Edition");
    ALLEGRO_BITMAP* icon_display = al_load_bitmap("./assets/icon.png");
    al_set_display_icon(display, icon_display);
@@ -57,12 +58,12 @@ int main(int argc, char* argv[])
    /* --------------------------------------------------------------------------
    *  MENU INICIAL
    ---------------------------------------------------------------------------*/
-   // Imagens do Menu
+   /* Carrega as imagens do Menu */
    ALLEGRO_BITMAP* logo_menu = al_load_bitmap("./assets/logo.png");
    ALLEGRO_BITMAP* arrow_select = al_load_bitmap("./assets/arrow_select_menu.png");
-   // Fonte usada no Menu
+   /* Fonte usada no Menu */
    ALLEGRO_FONT* font_menu = al_load_ttf_font("./assets/font/CooperBits.ttf", 32, 0);
-   // Música do Menu
+   /* Música do Menu */
    al_reserve_samples(1);
    ALLEGRO_SAMPLE* menu_music = al_load_sample("./assets/music/menu.mp3");
    ALLEGRO_SAMPLE_ID menu_music_id;
@@ -76,7 +77,10 @@ int main(int argc, char* argv[])
 
       /* Evento 01:
        * Fechar o Jogo */
-      if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) break;
+      if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE){
+         closeGame = true;
+         break;
+      }
       /* Evento 02:
        * Seleção da Opção do Menu */
       else if (event.type == ALLEGRO_EVENT_KEY_DOWN){
@@ -100,32 +104,31 @@ int main(int argc, char* argv[])
          al_flip_display();
       }
    }
-   // Interrompe a música do Menu
-   al_stop_sample(&menu_music_id);
-
+   /* Destrói os elementos do Menu */
+   al_stop_sample(&menu_music_id);  // Interrompe a música do Menu
    al_destroy_font(font_menu);
    al_destroy_bitmap(logo_menu);
    al_destroy_bitmap(arrow_select);
-   al_destroy_bitmap(icon_display);
    al_destroy_sample(menu_music);
 
-   // Encerramento do Jogo
-   if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE || selected_option == 1){
+   /* Encerramento do Jogo */
+   if (closeGame || selected_option == 1){
       al_destroy_timer(timer);
       al_destroy_event_queue(event_queue);
       al_destroy_display(display);
+      al_destroy_bitmap(icon_display);
       return 0;
    }
 
    /* --------------------------------------------------------------------------
    *  TELA DE SELEÇÃO
    ---------------------------------------------------------------------------*/
-   unsigned short character_select_opt = 0;
-   // Fonte utilizada na seleção
+   /* Fonte utilizada na Seleção de Personagem*/
    ALLEGRO_FONT* font_select = al_load_ttf_font("./assets/font/Fatal Fighter.ttf", 32, 0);
-   // Transformação usada para rotacionar o fundo
+   /* Transformação usada para Rotacionar o Fundo */
    ALLEGRO_TRANSFORM transf;
 
+   unsigned short character_select_opt = 0;
    unsigned short largura_string = al_get_text_width(font_select, "STREET FIGHTER");
    unsigned short altura_string = al_get_font_line_height(font_select);
    unsigned short largura, altura;
@@ -137,7 +140,10 @@ int main(int argc, char* argv[])
 
       /* Evento 01:
        * Encerramento do Jogo */
-      if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) break;
+      if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE){
+         closeGame = true;
+         break;
+      }
       /* Evento 02:
        * Atualização do Temporizador*/
       else if (event.type == ALLEGRO_EVENT_TIMER){
@@ -169,12 +175,20 @@ int main(int argc, char* argv[])
    }
    al_destroy_font(font_select);
 
+   /* Encerramento do Jogo */
+   if (closeGame){
+      al_destroy_timer(timer);
+      al_destroy_event_queue(event_queue);
+      al_destroy_display(display);
+      al_destroy_bitmap(icon_display);
+      return 0;
+   }
+
    /* --------------------------------------------------------------------------
    *  CONFIGURAÇÃO DA LUTA
    ---------------------------------------------------------------------------*/
    Player* player_01 = create_player(RYU, 10, DISPLAY_HEIGHT - 10, 70, 95);
    Player* player_02 = create_player(CHUNLI, DISPLAY_WIDTH - 80, DISPLAY_HEIGHT - 10, 70, 95);
-   ALLEGRO_BITMAP* ryu = al_load_bitmap("./assets/characters/ryu/idle.png");
    ALLEGRO_BITMAP* fundo = al_load_bitmap("./assets/background/ryu_stage.png");
 
    unsigned short damage = 0;
@@ -232,15 +246,16 @@ int main(int argc, char* argv[])
          al_flip_display();
       }
    }
-   // Destruição dos Jogadores
+   /* Destruição dos Jogadores */
    destroy_player(player_01);
-   al_destroy_bitmap(ryu);
    destroy_player(player_02);
-   // Destruição de todos os bitmaps
-   al_destroy_bitmap(icon_display);
-   al_destroy_bitmap(fundo);
-   // Destruição dos elementos do jogo
+
+   /* Destruição dos elementos do jogo */
    al_destroy_display(display);
    al_destroy_timer(timer);
    al_destroy_event_queue(event_queue);
+   al_destroy_bitmap(icon_display);
+   al_destroy_bitmap(fundo);
+
+   return 0;
 }
