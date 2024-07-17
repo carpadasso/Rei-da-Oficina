@@ -4,19 +4,41 @@
 
 Sprite* create_sprites(Character fighter_selected)
 {
-   char* pathfile;
-
    Sprite* sprites = (Sprite*) malloc(sizeof(Sprite));
    if (sprites == NULL) return NULL;
 
-   if (fighter_selected == RYU)
-      pathfile = strdup("./assets/characters/ryu");
-   else if (fighter_selected == CHUNLI)
-      pathfile = strdup("./assets/characters/chun_li");
+   if (fighter_selected == RYU){
+      sprites->idle = al_load_bitmap("./assets/characters/ryu/idle.png");
+      sprites->walking_pos = al_load_bitmap("./assets/characters/ryu/walk_pos.png");
+      sprites->walking_neg = al_load_bitmap("./assets/characters/ryu/walk_neg.png");
+      sprites->jump = al_load_bitmap("./assets/characters/ryu/jump.png");
+      sprites->crouch = al_load_bitmap("./assets/characters/ryu/crouch.png");
+      sprites->attack_sup = al_load_bitmap("./assets/characters/ryu/attack_sup.png");
+      sprites->attack_inf = al_load_bitmap("./assets/characters/ryu/attack_inf.png");
+   }
+   else if (fighter_selected == CHUNLI){
+      sprites->idle = al_load_bitmap("./assets/characters/chun_li/idle.png");
+      sprites->walking_pos = al_load_bitmap("./assets/characters/chun_li/walk_pos.png");
+      sprites->walking_neg = al_load_bitmap("./assets/characters/chun_li/walk_neg.png");
+      sprites->jump = al_load_bitmap("./assets/characters/chun_li/jump.png");
+      sprites->crouch = al_load_bitmap("./assets/characters/chun_li/crouch.png");
+      sprites->attack_sup = al_load_bitmap("./assets/characters/chun_li/attack_sup.png");
+      sprites->attack_inf = al_load_bitmap("./assets/characters/chun_li/attack_inf.png");
+   }
    else {
       free(sprites); return NULL;
    }
-   sprites->idle = al_load_bitmap(pathfile);
+   
+   return sprites;
+}
 
-   free(pathfile);
+void destroy_sprites(Sprite *sprites)
+{
+   al_destroy_bitmap(sprites->idle);
+   al_destroy_bitmap(sprites->walking_pos);
+   al_destroy_bitmap(sprites->walking_neg);
+   al_destroy_bitmap(sprites->jump);
+   al_destroy_bitmap(sprites->crouch);
+   al_destroy_bitmap(sprites->attack_sup);
+   al_destroy_bitmap(sprites->attack_inf);
 }

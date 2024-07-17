@@ -1,3 +1,6 @@
+#ifndef __PLAYER_H__
+#define __PLAYER_H__
+
 #include <allegro5/allegro5.h>
 #include "joystick.h"
 #include "sprite.h"
@@ -6,23 +9,19 @@
 #define DISPLAY_WIDTH  800
 #define DISPLAY_HEIGHT 600
 #define REFRESH_RATE   60.0
-#define STEP_FRONT     10
-#define STEP_BACK      5
+
+/* Define constantes de Jogador */
+#define DEFAULT_HIT_POINTS 100
+#define STEP_FRONT         10
+#define STEP_BACK          5
 
 /* Define constantes para cada direção de movimento do jogador */
-enum
-{ 
+typedef enum { 
    UP, 
    DOWN, 
    LEFT, 
    RIGHT 
-};
-
-/* Define constantes para cada personagem */
-typedef enum { 
-   RYU,
-   CHUNLI
-} Character;
+} Direction;
 
 /* Define a estrutura "Player"
  * selected_char: Personagem escolhido pelo jogador
@@ -33,10 +32,10 @@ typedef enum {
  * current_lenght: Comprimento atual do sprite do jogador
  * current_height: Altura atual do sprite do jogador
  * hit_points: Pontos de vida atual do jogador */
-typedef struct {
+typedef struct Player {
    Character selected_char;
-   Joystick* joystick;
-   Sprite* sprites;
+   Joystick *joystick;
+   Sprite *sprites;
    unsigned short current_x;
    unsigned short current_y;
    unsigned short current_lenght;
@@ -53,9 +52,11 @@ typedef struct {
 Player* create_player(Character char_selected, unsigned short x, unsigned short y,
                       unsigned short w, unsigned short h);
 /* destroy_player:
- * */
+ * Libera memória de todos os atributos do Jogador. */
 void destroy_player(Player* player);
 /* move_player:
  * */
-int move_player(Player* player, unsigned short direction, unsigned short step,
+int move_player(Player* player, Direction direction, unsigned short step,
                 unsigned short velocity, unsigned short max_x, unsigned short max_y);
+
+#endif

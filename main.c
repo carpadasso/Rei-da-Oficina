@@ -16,9 +16,21 @@
 #include "player.h"
 #include "joystick.h"
 
-void update_player_position(Player* p1, Player* p2)
+void update_player_position(Player* p1)
 {
+   if (p1->joystick->left)
+      move_player(p1, LEFT, 1, STEP_FRONT, DISPLAY_WIDTH - p1->current_lenght, 0);
+   if (p1->joystick->right)
+      move_player(p1, RIGHT, 1, STEP_FRONT, DISPLAY_WIDTH - p1->current_lenght, 0);
+   if (p1->joystick->up)
+      move_player(p1, UP, 1, STEP_FRONT, DISPLAY_WIDTH - p1->current_lenght, 0);
+   if (p1->joystick->down)
+      move_player(p1, DOWN, 1, STEP_FRONT, DISPLAY_WIDTH - p1->current_lenght, 0);
+}
 
+bool collision_player(Player *player01, Player *player02)
+{
+   return false;
 }
 
 int main(int argc, char* argv[])
@@ -55,6 +67,7 @@ int main(int argc, char* argv[])
    ALLEGRO_BITMAP* icon_display = al_load_bitmap("./assets/icon.png");
    al_set_display_icon(display, icon_display);
 
+   /* --------------------------------------------------------------------------------------------------------------- */
    /* --------------------------------------------------------------------------
    *  MENU INICIAL
    ---------------------------------------------------------------------------*/
@@ -119,7 +132,9 @@ int main(int argc, char* argv[])
       al_destroy_bitmap(icon_display);
       return 0;
    }
+   /* --------------------------------------------------------------------------------------------------------------- */
 
+   /* --------------------------------------------------------------------------------------------------------------- */
    /* --------------------------------------------------------------------------
    *  TELA DE SELEÇÃO
    ---------------------------------------------------------------------------*/
@@ -144,29 +159,31 @@ int main(int argc, char* argv[])
          closeGame = true;
          break;
       }
+      else if (event.type == ALLEGRO_EVENT_KEY_DOWN && event.keyboard.keycode == ALLEGRO_KEY_C)
+         break;
       /* Evento 02:
        * Atualização do Temporizador*/
       else if (event.type == ALLEGRO_EVENT_TIMER){
          movement += 0.5;
          if (movement >= altura_string) movement = 0.0;
-         //if (print_mov > 1) print_mov = 0;
-         //else print_mov++;
 
          al_clear_to_color(al_map_rgb(34, 35, 36));
 
-         /* Início da Rotação */
+         /* --- --- Início da Rotação --- --- */
          al_identity_transform(&transf);
          al_rotate_transform(&transf, 0.5f);
          al_use_transform(&transf);
+
          /* Elementos Rotacionados:
-          * Texto escrito "STREET FIGHTER" */
+          * > String "STREET FIGHTER" */
          for (altura = 0; altura < 2 * DISPLAY_HEIGHT; altura += altura_string)
             for (largura = 0; largura < 2 * DISPLAY_WIDTH; largura += largura_string + 10)
                al_draw_text(font_select, al_map_rgb(77, 78, 79), largura, -(altura_string + 10 + 400) + (altura + 10) + 
                             (int) movement, 0, "STREET FIGHTER");
+         
          al_identity_transform(&transf);
          al_use_transform(&transf);
-         /* Fim da Rotação */
+         /* --- --- Fim da Rotação --- --- */
 
          al_draw_text(font_select, al_map_rgb(255, 255, 255), 400, 100, ALLEGRO_ALIGN_CENTER, "ESCOLHA SEU PERSONAGEM");
          
@@ -183,12 +200,14 @@ int main(int argc, char* argv[])
       al_destroy_bitmap(icon_display);
       return 0;
    }
+   /* --------------------------------------------------------------------------------------------------------------- */
 
+   /* --------------------------------------------------------------------------------------------------------------- */
    /* --------------------------------------------------------------------------
    *  CONFIGURAÇÃO DA LUTA
    ---------------------------------------------------------------------------*/
-   Player* player_01 = create_player(RYU, 10, DISPLAY_HEIGHT - 10, 70, 95);
-   Player* player_02 = create_player(CHUNLI, DISPLAY_WIDTH - 80, DISPLAY_HEIGHT - 10, 70, 95);
+   Player* player_01 = create_player(RYU, 10, DISPLAY_HEIGHT - 275, 70, 95);
+   //TEMPORARIO: Player* player_02 = create_player(CHUNLI, DISPLAY_WIDTH - 80, DISPLAY_HEIGHT - 10, 70, 95);
    ALLEGRO_BITMAP* fundo = al_load_bitmap("./assets/background/ryu_stage.png");
 
    unsigned short damage = 0;
@@ -196,6 +215,9 @@ int main(int argc, char* argv[])
    while (true)
    {
       al_wait_for_event(event_queue, &event);
+
+      /* Atualização dos atributos dos Jogadores */
+      update_player_position(player_01);
 
       /* Evento 01:
        * Encerrar o Jogo */
@@ -211,19 +233,21 @@ int main(int argc, char* argv[])
          else if (event.keyboard.keycode == ALLEGRO_KEY_A) joystick_left(player_01->joystick);
          else if (event.keyboard.keycode == ALLEGRO_KEY_S) joystick_down(player_01->joystick);
          else if (event.keyboard.keycode == ALLEGRO_KEY_D) joystick_right(player_01->joystick);
-         else if (event.keyboard.keycode == ALLEGRO_KEY_Z) { printf("Ataque P1 Superior\n"); damage += 10; }
-         else if (event.keyboard.keycode == ALLEGRO_KEY_X) { printf("Ataque P1 Inferior\n"); damage += 20; }
+         else if (event.keyboard.keycode == ALLEGRO_KEY_Z) joystick_button_1(player_01->joystick);
+         else if (event.keyboard.keycode == ALLEGRO_KEY_X) joystick_button_2(player_01->joystick);
 
          /* Teclas do Jogador 02:
           * CIMA, ESQUERDA, BAIXO, DIREITA -> Movimentação do Jogador 02
           * K -> Ataque com Membro Superior 
           * L -> Ataque com Membro Inferior */
+         /* <----------------- TEMPORÁRIO
          else if (event.keyboard.keycode == ALLEGRO_KEY_UP) joystick_up(player_02->joystick);
          else if (event.keyboard.keycode == ALLEGRO_KEY_LEFT) joystick_left(player_02->joystick);
          else if (event.keyboard.keycode == ALLEGRO_KEY_DOWN) joystick_down(player_02->joystick);
          else if (event.keyboard.keycode == ALLEGRO_KEY_RIGHT) joystick_right(player_02->joystick);
-         else if (event.keyboard.keycode == ALLEGRO_KEY_K) printf("Ataque P2 Superior\n");
-         else if (event.keyboard.keycode == ALLEGRO_KEY_L) printf("Ataque P2 Inferior\n");
+         else if (event.keyboard.keycode == ALLEGRO_KEY_K) joystick_button_1(player_02->joystick);
+         else if (event.keyboard.keycode == ALLEGRO_KEY_L) joystick_button_2(player_02->joystick);
+         TEMPORÁRIO ----------------- > */
       }
       /* Evento 03:
        * Atualização do Temporizador */
@@ -233,22 +257,83 @@ int main(int argc, char* argv[])
 
          /* Exibição de informações importantes:
           * Pontuação, Contador da Luta, Barras de Vida */
-
+         
          /* Barra de Vida - Jogador 01*/
          al_draw_filled_rectangle(30, 50, 330, 70, al_color_name("red"));
-         al_draw_filled_rectangle(30, 50, 330, 70, al_color_name("yellow"));
+         if (player_01->hit_points >= 0) 
+            al_draw_filled_rectangle(30, 50, 330 * (player_01->hit_points / 
+                                     DEFAULT_HIT_POINTS), 70, 
+                                     al_color_name("yellow"));
          al_draw_rectangle(29.5, 49.5, 330.5, 70.5, al_color_name("white"), 3);
+
          /* Barra de Vida - Jogador 02*/
+         /* <----------------- TEMPORÁRIO
          al_draw_filled_rectangle(470, 50, 770, 70, al_color_name("red"));
-         if (damage <= 300) al_draw_filled_rectangle(470, 50, 770 - damage, 70, al_color_name("yellow"));
+         if (player_02->hit_points >= 0)
+            al_draw_filled_rectangle(470, 50, 770 * (1 - DEFAULT_HIT_POINTS / player_02->hit_points),
+                                     70, al_color_name("yellow"));
          al_draw_rectangle(469.5, 49.5, 770.5, 70.5, al_color_name("white"), 3);
+         TEMPORÁRIO ----------------- > */
+
+         /* Exibição dos sprites dos Jogadores */
+         /*
+         if (isPlayerIdle(player_01)){
+            execIdle(player_01);
+         }
+         else if (isPlayerMovingLeft(player_01)){
+            execMovingLeft(player_01);
+         }
+         else if (isPlayerMovingRight(player_01)){
+            execMovingRight(player_01);            
+         }
+         else if (isPlayerJumping(player_01)){
+            execJump(player_01);
+         }
+         else if (isPlayerAttackingSup(player_01)){
+            execAttackSup(player_01);
+         }
+         else if (isPlayerAttackingInf(player_01)){
+            execAttackInf(player_01);
+         }
+         */
+
+         if (player_01->joystick->up){
+            al_draw_scaled_bitmap(player_01->sprites->jump, 0, 0, 70, 95, player_01->current_x,
+                                  player_01->current_y, 70*2.5, 95*2.5, 0);
+         }
+         else if (player_01->joystick->left){
+            al_draw_scaled_bitmap(player_01->sprites->walking_neg, 0, 0, 70, 95, player_01->current_x,
+                                  player_01->current_y, 70*2.5, 95*2.5, 0);
+         }
+         else if (player_01->joystick->right){
+            al_draw_scaled_bitmap(player_01->sprites->walking_pos, 0, 0, 70, 95, player_01->current_x,
+                                  player_01->current_y, 70*2.5, 95*2.5, 0);
+         }
+         else if (player_01->joystick->down){
+            al_draw_scaled_bitmap(player_01->sprites->crouch, 0, 0, 70, 95, player_01->current_x,
+                                  player_01->current_y, 70*2.5, 95*2.5, 0);
+         }
+         else if (player_01->joystick->button_1){
+            al_draw_scaled_bitmap(player_01->sprites->attack_sup, 0, 0, 70, 95, player_01->current_x,
+                                  player_01->current_y, 70*2.5, 95*2.5, 0);
+         }
+         else if (player_01->joystick->button_2){
+            al_draw_scaled_bitmap(player_01->sprites->attack_inf, 0, 0, 70, 95, player_01->current_x,
+                                  player_01->current_y, 70*2.5, 95*2.5, 0);
+         }
+         else {
+            al_draw_scaled_bitmap(player_01->sprites->idle, 0, 0, 70, 95, player_01->current_x,
+                                  player_01->current_y, 70*2.5, 95*2.5, 0);
+         }
 
          al_flip_display();
       }
    }
+   /* --------------------------------------------------------------------------------------------------------------- */
+
    /* Destruição dos Jogadores */
    destroy_player(player_01);
-   destroy_player(player_02);
+   //TEMPORARIO: destroy_player(player_02);
 
    /* Destruição dos elementos do jogo */
    al_destroy_display(display);
