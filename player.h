@@ -27,20 +27,21 @@ typedef enum {
  * selected_char: Personagem escolhido pelo jogador
  * joystick: Registro de movimento do jogador
  * sprites: Coleção dos sprites de movimento
- * current_x: Coordenada x atual do jogador
- * current_y: Coordenada y atual do jogador
- * current_lenght: Comprimento atual do sprite do jogador
- * current_height: Altura atual do sprite do jogador
+ * x: Coordenada x atual do jogador
+ * y: Coordenada y atual do jogador
+ * w: Comprimento atual do sprite do jogador
+ * h: Altura atual do sprite do jogador
  * hit_points: Pontos de vida atual do jogador */
 typedef struct Player {
    Character selected_char;
    Joystick *joystick;
    Sprite *sprites;
-   unsigned short current_x;
-   unsigned short current_y;
-   unsigned short current_lenght;
-   unsigned short current_height;
+   unsigned short x;
+   unsigned short y;
+   unsigned short w;
+   unsigned short h;
    unsigned short hit_points;
+   int pos_flag;
 } Player;
 
 /* Funções da Interface "player" */
@@ -51,9 +52,11 @@ typedef struct Player {
  * Retorna um ponteiro para a estrutura alocada. */
 Player* create_player(Character char_selected, unsigned short x, unsigned short y,
                       unsigned short w, unsigned short h);
+
 /* destroy_player:
  * Libera memória de todos os atributos do Jogador. */
 void destroy_player(Player* player);
+
 /* move_player:
  * */
 int move_player(Player* player, Direction direction, unsigned short step,

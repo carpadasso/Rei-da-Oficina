@@ -27,7 +27,7 @@ typedef struct Sprite {
  * personagem do jogo. */
 typedef enum { 
    RYU,
-   CHUNLI
+   KEN
 } Character;
 
 /* Funções da Biblioteca "sprite" */
@@ -37,6 +37,7 @@ typedef enum {
  * dado um personagem fornecido como parâmetro. 
  * Retorna o ponteiro para estrutura. */
 Sprite* create_sprites(Character fighter_selected);
+
 /* destroy_sprites:
  * Destrói os bitmaps reservados para os sprites do
  * jogador. */
