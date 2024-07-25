@@ -42,3 +42,26 @@ void destroy_sprites(Sprite *sprites)
    al_destroy_bitmap(sprites->attack_sup);
    al_destroy_bitmap(sprites->attack_inf);
 }
+
+void draw_sprite_player(Player* p, unsigned short *frame)
+{
+   int flag = p->pos_flag;
+
+   if (p->joystick->up)
+      al_draw_scaled_bitmap(p->sprites->jump, 0, 20, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
+   else if (p->joystick->left)
+      al_draw_scaled_bitmap(p->sprites->walking_neg, 0, 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
+   else if (p->joystick->right)
+      al_draw_scaled_bitmap(p->sprites->walking_pos, 0, 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
+   else if (p->joystick->down)
+      al_draw_scaled_bitmap(p->sprites->crouch, 0, 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
+   else if (p->joystick->button_1){
+      p->w = 110;
+      p->h = 95;
+      al_draw_scaled_bitmap(p->sprites->attack_sup, 70, 0, 110, 95, p->x, p->y, 110*2.5, 95*2.5, flag);
+   }
+   else if (p->joystick->button_2)
+      al_draw_scaled_bitmap(p->sprites->attack_inf, 140, 0, 90, 95, p->x, p->y, 90*2.5, 95*2.5, flag);
+   else
+      al_draw_scaled_bitmap(p->sprites->idle, 0, 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
+}

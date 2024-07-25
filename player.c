@@ -45,42 +45,42 @@ void destroy_player(Player *player)
 /* -------------------
  *   Player Collision
  * ------------------- */
-bool is_player_colliding(Player *p1, Player *p2)
+bool is_area_colliding(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2)
 {
-   /* Colisão de Player01 -> Player02 */
-   /* Canto Superior Esquerdo de Player 01 */
-   if ((p2->x <= p1->x) && (p1->x <= (p2->x + p2->w)) &&
-       (p2->y <= p1->y) && (p1->y <= (p2->y + p2->h)))
+   /* Colisão de Área 01 -> Área 02 */
+   /* Canto Superior Esquerdo de Área 01 */
+   if ((x2 <= x1) && (x1 <= (x2 + w2)) &&
+       (y2 <= y1) && (y1 <= (y2 + h2)))
       return true;
-   /* Canto Superior Direito de Player 01 */
-   if ((p2->x <= (p1->x + p1->w)) && ((p1->x + p1->w) <= (p2->x + p2->w)) &&
-       (p2->y <= p1->y) && (p1->y <= (p2->y + p2->h)))
+   /* Canto Superior Direito de Área 01 */
+   if ((x2 <= (x1 + w1)) && ((x1 + w1) <= (x2 + w2)) &&
+       (y2 <= y1) && (y1 <= (y2 + h1)))
       return true;
-   /* Canto Inferior Esquerdo de Player 01 */
-   if ((p2->x <= p1->x) && (p1->x <= (p2->x + p2->w)) &&
-       (p2->y <= (p1->y + p1->h)) && ((p1->y + p1->h) <= (p2->y + p2->h)))
+   /* Canto Inferior Esquerdo de Área 01 */
+   if ((x2 <= x1) && (x1 <= (x2 + w2)) &&
+       (y2 <= (y1 + h1)) && ((y1 + h1) <= (y2 + h2)))
       return true;
    /* Canto Inferior Direito de Player 01 */
-   if ((p2->x <= (p1->x + p1->w)) && ((p1->x + p1->w) <= (p2->x + p2->w)) &&
-       (p2->y <= (p1->y + p1->h)) && ((p1->y + p1->h) <= (p2->y + p2->h)))
+   if ((x2 <= (x1 + w1)) && ((x1 + w1) <= (x2 + w2)) &&
+       (y2 <= (y1 + h1)) && ((y1 + h1) <= (y2 + h2)))
       return true;
 
-   /* Colisão de Player02 -> Player01 */
+   /* Colisão de Área 02 -> Área 01 */
    /* Canto Superior Esquerdo de Player 02 */
-   if ((p1->x <= p2->x) && (p2->x <= (p1->x + p1->w)) &&
-       (p1->y <= p2->y) && (p2->y <= (p1->y + p1->h)))
+   if ((x1 <= x2) && (x2 <= (x1 + w1)) &&
+       (y1 <= y2) && (y2 <= (y1 + h1)))
       return true;
    /* Canto Superior Direito de Player 02 */
-   if ((p1->x <= (p2->x + p2->w)) && ((p2->x + p2->w) <= (p1->x + p1->w)) &&
-       (p1->y <= p2->y) && (p2->y <= (p1->y + p1->h)))
+   if ((x1 <= (x2 + w2)) && ((x2 + w2) <= (x1 + w1)) &&
+       (y1 <= y2) && (y2 <= (y1 + h1)))
       return true;
    /* Canto Inferior Esquerdo de Player 02 */
-   if ((p1->x <= p2->x) && (p2->x <= (p1->x + p1->w)) &&
-       (p1->y <= (p2->y + p2->h)) && ((p2->y + p2->h) <= (p1->y + p1->h)))
+   if ((x1 <= x2) && (x2 <= (x1 + w1)) &&
+       (y1 <= (y2 + h2)) && ((y2 + h2) <= (y1 + h1)))
       return true;
    /* Canto Inferior Direito de Player 02 */
-   if ((p1->x <= (p2->x + p2->w)) && ((p2->x + p2->w) <= (p1->x + p1->w)) &&
-       (p1->y <= (p2->y + p2->h)) && ((p2->y + p2->h) <= (p1->y + p1->h)))
+   if ((x1 <= (x2 + w2)) && ((x2 + w2) <= (x1 + w1)) &&
+       (y1 <= (y2 + h2)) && ((y2 + h2) <= (y1 + h1)))
       return true;
 
    return false;

@@ -3,6 +3,7 @@
 
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_image.h>
+#include "player.h"
 
 /* Estrutura "Sprite"
  * > idle: Animação quando não há comandos
@@ -30,6 +31,19 @@ typedef enum {
    KEN
 } Character;
 
+/* Tipo "Movement" 
+ * Tipo enumerável que define o movimento que está
+ * sendo realizado pelo jogador no instante. */
+typedef enum {
+   IDLE,
+   WALKING_POSITIVE,
+   WALKING_NEGATIVE,
+   JUMPING,
+   CROUCHING,
+   ATTACKING_SUP,
+   ATTACKING_INF,
+} Movement;
+
 /* Funções da Biblioteca "sprite" */
 
 /* create_sprites:
@@ -42,5 +56,10 @@ Sprite* create_sprites(Character fighter_selected);
  * Destrói os bitmaps reservados para os sprites do
  * jogador. */
 void destroy_sprites(Sprite* sprites);
+
+/* draw_sprite_player:
+ * Seleciona o frame desejado baseado no estado atual do
+ * jogador. */
+void draw_sprite_player(Player *player, unsigned short *frame);
 
 #endif

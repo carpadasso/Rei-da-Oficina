@@ -34,6 +34,7 @@ typedef enum {
  * hit_points: Pontos de vida atual do jogador */
 typedef struct Player {
    Character selected_char;
+   Movement move;
    Joystick *joystick;
    Sprite *sprites;
    unsigned short x;
