@@ -10,8 +10,7 @@
  *   Create and Destroy
  * ------------------ */
 
-Player* create_player(Character character, unsigned short x, unsigned short y,
-                      unsigned short w, unsigned short h)
+Player* create_player(Character character, int x, int y, int w, int h)
 {
    /* Alocação de Memória */
    Player* new_player = (Player*) malloc(sizeof(Player));
@@ -25,6 +24,7 @@ Player* create_player(Character character, unsigned short x, unsigned short y,
    new_player->h = h;
    new_player->hit_points = DEFAULT_HIT_POINTS;
    new_player->pos_flag = 0;
+   new_player->isJumping = false;
 
    new_player->joystick = create_joystick();
    new_player->sprites = create_sprites(character);
@@ -90,45 +90,132 @@ bool is_area_colliding(int x1, int y1, int w1, int h1, int x2, int y2, int w2, i
  *   Player Movement
  * ------------------ */
 
-bool isUpMovementValid(Player* player, unsigned short steps, unsigned short velocity)
+void update_player_movement(Player* p)
 {
-   return ((player->y - steps * velocity) - player->h / 2 >= 0);
+   if (p->move != JUMPING && p->move != CROUCHING && p->move != ATTACKING_SUP && p->move != ATTACKING_INF){
+      /* Possibilidade 01: Parado 
+      * 1) Todos os inputs estão 0 
+      * 2) CIMA e BAIXO ativos
+      * 3) ESQUERDA e DIREITA ativos */
+      if (( !(p->joystick->up) && !(p->joystick->down) 
+            && !(p->joystick->left) && !(p->joystick->right) 
+            && !(p->joystick->button_1) && !(p->joystick->button_2) )
+            || (p->joystick->up && p->joystick->down)
+            || (p->joystick->left && p->joystick->right))
+         p->move = IDLE;
+
+      /* Possibilidade 02: Andar Positivo */
+      else if (p->joystick->right)
+         p->move = WALKING_POSITIVE;
+
+      /* Possibilidade 03: Andar Negativo */
+      else if (p->joystick->left)
+         p->move = WALKING_NEGATIVE;
+   }
+   else {
+      /* Possibilidade 04: Pular */
+      if (p->joystick->up)
+         p->move = JUMPING;
+
+      /* Possibilidade 05: Agachar */
+      if (p->joystick->down)
+         p->move = CROUCHING;
+
+      /* Possibilidade 06: Ataque Superior */
+      if (p->joystick->button_1)
+         p->move = ATTACKING_SUP;
+
+      /* Possibilidade 07: Ataque Inferior */
+      if (p->joystick->button_2)
+         p->move = ATTACKING_INF;
+   }
 }
 
-bool isDownMovementValid(Player* player, unsigned short steps, unsigned short max_y,
-                         unsigned short velocity)
+void update_player_coordinates(Player* p)
 {
-   return ((player->y + steps * velocity) + player->h / 2 <= max_y);
+   /* Possibilidade 01: Jogador PARADO 
+    * Se o jogador está parado, mantém as coordenadas */
+   if (p->move == IDLE)
+      return;
+
+   /* Possibilidade 02: Jogador ANDANDO POSITIVO
+    * Incrementa-se a coordenada x do jogador baseado na direção
+    * que seu personagem está olhando. */
+   else if (p->move == WALKING_POSITIVE){
+      if (p->pos_flag == 0) p->x += STEP_FRONT;
+      else p->x += STEP_BACK;
+   }
+
+   /* Possibilidade 03: Jogador ANDANDO NEGATIVO
+    * Decrementa-se a coordenada x do jogador baseado na direção
+    * que seu personagem está olhando. */
+   else if (p->move == WALKING_NEGATIVE){
+      if (p->pos_flag == 0) p->x -= STEP_BACK;
+      else p->x -= STEP_FRONT;
+   }
+
+   /* Possibilidade 04: Jogador PULANDO 
+    * Aqui as coisas complicam um pouco mais:
+    * 1) Primeiro, verificamos se o jogador quer movimentar durante o pulo
+    * 2) Segundo, verificamos se o jogador atingiu a altura máxima de um pulo
+    * (não queremos o jogador entrando em órbita), se ele já atingiu a 
+    * 3) Ajustamos a coordenada y do jogador */
+   else if (p->move == JUMPING){
+      /* Parte 01: Movento Esquerda-Direita no meio do ar */
+      if (p->joystick->left){
+         if (p->pos_flag == 0) p->x -= STEP_FRONT;
+         else p->x -= STEP_BACK;
+      }
+      if (p->joystick->right){
+         if (p->pos_flag == 0) p->x += STEP_BACK;
+         else p->x += STEP_FRONT;
+      }
+      if (p->joystick->left && p->joystick->right){
+         if (p->pos_flag == 0) p->x -= (STEP_FRONT - STEP_BACK);
+         else p->x += (STEP_FRONT - STEP_BACK);
+      }
+
+      /* Parte 02: Fazendo o jogador pular */
+      if (!(p->isJumping)){
+         if (p->y > Y_MIN) p->isJumping = true;
+         else p->y -= JUMP_VEL;
+      }
+      else {
+         if (p->y < Y_MAX){
+            p->move = IDLE;
+            p->isJumping = false;
+         }
+         else p->y += JUMP_VEL;
+      }
+   }
 }
 
-bool isLeftMovementValid(Player* player, unsigned short steps, unsigned short velocity)
+/* ------------------
+ *   Player Sprite
+ * ------------------ */
+void draw_sprite_player(Player* p, unsigned short *frame)
 {
-   return ((player->x - steps * velocity) - player->w / 2 >= 0);
-}
+   int flag = p->pos_flag;
+   unsigned short gap;
 
-bool isRightMovementValid(Player* player, unsigned short steps, unsigned short velocity,
-                          unsigned short max_x)
-{
-   return ((player->x + steps * velocity) + player->w / 2 <= max_x);
-}
+   if (p->pos_flag == 0) gap = 0;
+   else gap = 60;
 
-int move_player(Player* player, Direction direction, unsigned short steps,
-                unsigned short velocity, unsigned short max_y, unsigned short max_x)
-{
-   if (direction == UP){ 
-      if (isUpMovementValid(player, steps, velocity))
-         player->y -= steps * velocity;
+   if (p->joystick->up)
+      al_draw_scaled_bitmap(p->sprites->jump, 0, 20, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
+   else if (p->joystick->left)
+      al_draw_scaled_bitmap(p->sprites->walking_neg, 0, 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
+   else if (p->joystick->right)
+      al_draw_scaled_bitmap(p->sprites->walking_pos, 0, 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
+   else if (p->joystick->down)
+      al_draw_scaled_bitmap(p->sprites->crouch, 0, 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
+   else if (p->joystick->button_1){
+      p->w = 110;
+      p->h = 95;
+      al_draw_scaled_bitmap(p->sprites->attack_sup, 70, 0, 110, 95, p->x - gap, p->y, 110*2.5, 95*2.5, flag);
    }
-   else if (direction == DOWN){
-      if (isDownMovementValid(player, steps, velocity, max_y))
-         player->y += steps * velocity;
-   }
-   else if (direction == LEFT){
-      if (isLeftMovementValid(player, steps, velocity))
-         player->x -= steps * velocity;
-   }
-   else if (direction == RIGHT){
-      if (isRightMovementValid(player, steps, velocity, max_x))
-         player->x += steps * velocity;
-   }
+   else if (p->joystick->button_2)
+      al_draw_scaled_bitmap(p->sprites->attack_inf, 140, 0, 90, 95, p->x - gap, p->y, 90*2.5, 95*2.5, flag);
+   else
+      al_draw_scaled_bitmap(p->sprites->idle, 0, 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
 }

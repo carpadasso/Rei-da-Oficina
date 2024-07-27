@@ -3,7 +3,8 @@
 
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_image.h>
-#include "player.h"
+
+#include "enums.h"
 
 /* Estrutura "Sprite"
  * > idle: Animação quando não há comandos
@@ -13,7 +14,7 @@
  * > crouch: Animação de abaixar-se
  * > attack_sup: Animação de ataque com membros superiores
  * > attack_inf: Animação de ataque com membros inferiores */
-typedef struct Sprite {
+struct Sprite_st {
    ALLEGRO_BITMAP* idle;
    ALLEGRO_BITMAP* walking_pos;
    ALLEGRO_BITMAP* walking_neg;
@@ -21,28 +22,8 @@ typedef struct Sprite {
    ALLEGRO_BITMAP* crouch;
    ALLEGRO_BITMAP* attack_sup;
    ALLEGRO_BITMAP* attack_inf;
-} Sprite;
-
-/* Tipo "Character" 
- * Tipo enumerável que define constantes para cada
- * personagem do jogo. */
-typedef enum { 
-   RYU,
-   KEN
-} Character;
-
-/* Tipo "Movement" 
- * Tipo enumerável que define o movimento que está
- * sendo realizado pelo jogador no instante. */
-typedef enum {
-   IDLE,
-   WALKING_POSITIVE,
-   WALKING_NEGATIVE,
-   JUMPING,
-   CROUCHING,
-   ATTACKING_SUP,
-   ATTACKING_INF,
-} Movement;
+};
+typedef struct Sprite_st Sprite;
 
 /* Funções da Biblioteca "sprite" */
 
@@ -56,10 +37,5 @@ Sprite* create_sprites(Character fighter_selected);
  * Destrói os bitmaps reservados para os sprites do
  * jogador. */
 void destroy_sprites(Sprite* sprites);
-
-/* draw_sprite_player:
- * Seleciona o frame desejado baseado no estado atual do
- * jogador. */
-void draw_sprite_player(Player *player, unsigned short *frame);
 
 #endif

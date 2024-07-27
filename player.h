@@ -2,6 +2,8 @@
 #define __PLAYER_H__
 
 #include <allegro5/allegro5.h>
+
+#include "enums.h"
 #include "joystick.h"
 #include "sprite.h"
 
@@ -14,14 +16,9 @@
 #define DEFAULT_HIT_POINTS 100
 #define STEP_FRONT         10
 #define STEP_BACK          5
-
-/* Define constantes para cada direção de movimento do jogador */
-typedef enum { 
-   UP, 
-   DOWN, 
-   LEFT, 
-   RIGHT 
-} Direction;
+#define JUMP_VEL           27
+#define Y_MAX              DISPLAY_HEIGHT - 300
+#define Y_MIN              Y_MAX - 125
 
 /* Define a estrutura "Player"
  * selected_char: Personagem escolhido pelo jogador
@@ -33,34 +30,45 @@ typedef enum {
  * h: Altura atual do sprite do jogador
  * hit_points: Pontos de vida atual do jogador */
 typedef struct Player {
+   int x, y;
+   int w, h;
+   int hit_points;
+   int pos_flag;
+   bool isJumping;
    Character selected_char;
    Movement move;
    Joystick *joystick;
    Sprite *sprites;
-   unsigned short x;
-   unsigned short y;
-   unsigned short w;
-   unsigned short h;
-   unsigned short hit_points;
-   int pos_flag;
 } Player;
 
-/* Funções da Interface "player" */
+/* -----------------------------
+ * Funções da Interface "player" 
+ * ----------------------------- */
 
-/* creater_player:
+/* create_player:
  * Aloca memória para um jogador recém criado.
  * Recebe e atribui os parâmetros do jogador fornecidos.
  * Retorna um ponteiro para a estrutura alocada. */
-Player* create_player(Character char_selected, unsigned short x, unsigned short y,
-                      unsigned short w, unsigned short h);
+Player* create_player(Character char_selected, int x, int y, int w, int h);
 
 /* destroy_player:
  * Libera memória de todos os atributos do Jogador. */
 void destroy_player(Player* player);
 
-/* move_player:
- * */
-int move_player(Player* player, Direction direction, unsigned short step,
-                unsigned short velocity, unsigned short max_x, unsigned short max_y);
+/* update_player_movement:
+ * Atualiza o movimento vigente do jogador baseado nos inputs
+ * do joystick. */
+void update_player_movement(Player* p);
+
+/* update_player_coordinates: 
+ * Atualiza as coordenadas do jogador baseado no movimento vigente. */
+void update_player_coordinates(Player* p);
+
+/* draw_sprite_player:
+ * Seleciona o frame desejado baseado no estado atual do
+ * jogador. */
+void draw_sprite_player(Player *player, unsigned short *frame);
+
+bool is_area_colliding(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2);
 
 #endif
