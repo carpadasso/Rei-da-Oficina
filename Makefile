@@ -31,7 +31,7 @@ LIBS = -L/usr/lib -lallegro -lallegro_main -lallegro_font -lallegro_ttf \
 # all: Compila o projeto
 all: $(PROJECT)
 
-$(PROJ_NAME): $(OBJ)
+$(PROJECT): $(OBJ)
 	$(CC) -o $@ $^ $(LIBS)
 
 %.o: %.c
@@ -39,4 +39,4 @@ $(PROJ_NAME): $(OBJ)
 
 # clean: Remove os arquivos objeto e temporários
 clean:
-	rm -rf *.o $(PROJ_NAME) *~
+	rm -rf *.o $(PROJECT) *~
