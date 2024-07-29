@@ -93,16 +93,11 @@ bool is_area_colliding(int x1, int y1, int w1, int h1, int x2, int y2, int w2, i
 
 void update_player_movement(Player* p1, Player* p2)
 {
-   /* Possibilidade 01: Parado 
-   * 1) Todos os inputs estão 0 
-   * 2) CIMA e BAIXO ativos
-   * 3) ESQUERDA e DIREITA ativos */
-   if (( !(p1->joystick->up) && !(p1->joystick->down) 
-         && !(p1->joystick->left) && !(p1->joystick->right) 
-         && !(p1->joystick->button_1) && !(p1->joystick->button_2) )
-         || (p1->joystick->up && p1->joystick->down)
-         || (p1->joystick->left && p1->joystick->right))
-      p1->move = IDLE;
+
+   /* Possibilidade 01: Pular */
+   if (p1->joystick->up){
+      p1->move = JUMPING;
+   }
 
    /* Possibilidade 02: Andar Positivo */
    else if (p1->joystick->right)
@@ -111,24 +106,23 @@ void update_player_movement(Player* p1, Player* p2)
    /* Possibilidade 03: Andar Negativo */
    else if (p1->joystick->left)
       p1->move = WALKING_NEGATIVE;
-   
-   /* Possibilidade 04: Pular */
-   if (p1->joystick->up && p1->isJumping == true){
-      p1->move = JUMPING;
-      p1->isJumping = true;
-   }
 
-   /* Possibilidade 05: Agachar */
-   if (p1->joystick->down)
+   /* Possibilidade 04: Agachar */
+   else if (p1->joystick->down)
       p1->move = CROUCHING;
 
-   /* Possibilidade 06: Ataque Superior */
-   if (p1->joystick->button_1)
+   /* Possibilidade 05: Ataque Superior */
+   else if (p1->joystick->button_1)
       p1->move = ATTACKING_SUP;
 
-   /* Possibilidade 07: Ataque Inferior */
-   if (p1->joystick->button_2)
+   /* Possibilidade 06: Ataque Inferior */
+   else if (p1->joystick->button_2)
       p1->move = ATTACKING_INF;
+
+   /* Possibilidade 07: Parado */
+   else {
+      p1->move = IDLE;
+   }
 }
 
 void update_player_coordinates(Player* p1, Player* p2)
@@ -141,19 +135,25 @@ void update_player_coordinates(Player* p1, Player* p2)
    /* Possibilidade 02: Jogador ANDANDO POSITIVO
     * Incrementa-se a coordenada x do jogador baseado na direção
     * que seu personagem está olhando. */
-   else if (p1->move == WALKING_POSITIVE
-            && !is_area_colliding(p1->x - 50, p1->y, p1->w + 50, p1->h, p2->x, p2->y, p2->w, p2->h)){
+   else if (p1->move == WALKING_POSITIVE){
       if (p1->pos_flag == 0) p1->x += STEP_FRONT;
       else p1->x += STEP_BACK;
+      if (is_area_colliding(p1->x, p1->y, p1->w, p1->h, p2->x, p2->y, p2->w, p2->h)){
+         if (p1->pos_flag == 0) p1->x -= STEP_FRONT;
+         else p1->x -= STEP_BACK;
+      }
    }
 
    /* Possibilidade 03: Jogador ANDANDO NEGATIVO
     * Decrementa-se a coordenada x do jogador baseado na direção
     * que seu personagem está olhando. */
-   else if (p1->move == WALKING_NEGATIVE
-            && !is_area_colliding(p1->x + STEP_FRONT, p1->y, p1->w, p1->h, p2->x, p2->y, p2->w, p2->h)){
+   else if (p1->move == WALKING_NEGATIVE){
       if (p1->pos_flag == 0) p1->x -= STEP_BACK;
       else p1->x -= STEP_FRONT;
+      if (is_area_colliding(p1->x, p1->y, p1->w, p1->h, p2->x, p2->y, p2->w, p2->h)){
+         if (p1->pos_flag == 0) p1->x += STEP_BACK;
+         else p1->x += STEP_FRONT;
+      }
    }
 
    /* Possibilidade 04: Jogador PULANDO 
@@ -192,6 +192,37 @@ void update_player_coordinates(Player* p1, Player* p2)
     * ultrapassar os limites da tela, se escondendo no infinito */
    if (p1->x < 0) p1->x = 0;
    if (p1->x > 625) p1->x = 625;
+}
+
+void execute_attack(Player* p1, Player* p2)
+{
+   int gap;
+
+   /* Verifica se o golpe é "válido", isto é,
+    * se o J1 der um soco e o J2 estiver agachado, em teoria
+    * o soco não deveria contar. O mesmo vale para o chute + pulo. */
+   if (!(p1->move == ATTACKING_SUP && p2->move != CROUCHING) && !(p1->move == ATTACKING_INF && p2->move != JUMPING))
+      return;
+   
+   if (p1->pos_flag == 0)      gap = 0;
+   else if (p1->pos_flag == 1) gap = 70;
+
+   if (p1->selected_char == RYU){
+      if (p1->move == ATTACKING_SUP){
+         if (is_area_colliding(p1->x - gap, p1->y, p1->w, p1->h, p2->x, p2->y, p2->w, p2->h)) p2->hit_points -= 5;
+      }
+      if (p1->move == ATTACKING_INF){
+         if (is_area_colliding(p1->x - gap, p1->y, p1->w, p1->h, p2->x, p2->y, p2->w, p2->h)) p2->hit_points -= 2;
+      }
+   }
+   else if (p1->selected_char == KEN){
+      if (p1->move == ATTACKING_SUP){
+         if (is_area_colliding(p1->x - gap, p1->y, p1->w, p1->h, p2->x, p2->y, p2->w, p2->h)) p2->hit_points -= 5;
+      }
+      if (p1->move == ATTACKING_INF){
+         if (is_area_colliding(p1->x - gap, p1->y, p1->w, p1->h, p2->x, p2->y, p2->w, p2->h)) p2->hit_points -= 2;
+      }
+   }
 }
 
 /* ------------------

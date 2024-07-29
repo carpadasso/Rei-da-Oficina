@@ -22,6 +22,61 @@
 /* --------------------------------
  * Funções Secundárias / Auxiliares
  * -------------------------------- */
+// A utility function to reverse a string
+void reverse(char str[], int length)
+{
+    int start = 0;
+    int end = length - 1;
+    while (start < end) {
+        char temp = str[start];
+        str[start] = str[end];
+        str[end] = temp;
+        end--;
+        start++;
+    }
+}
+
+// Implementation of citoa()
+char* citoa(int num, char* str, int base)
+{
+    int i = 0;
+    bool isNegative = false;
+ 
+    /* Handle 0 explicitly, otherwise empty string is
+     * printed for 0 */
+    if (num == 0) {
+        str[i++] = '0';
+        str[i] = '\0';
+        return str;
+    }
+ 
+    // In standard itoa(), negative numbers are handled
+    // only with base 10. Otherwise numbers are
+    // considered unsigned.
+    if (num < 0 && base == 10) {
+        isNegative = true;
+        num = -num;
+    }
+ 
+    // Process individual digits
+    while (num != 0) {
+        int rem = num % base;
+        str[i++] = (rem > 9) ? (rem - 10) + 'a' : rem + '0';
+        num = num / base;
+    }
+ 
+    // If number is negative, append '-'
+    if (isNegative)
+        str[i++] = '-';
+ 
+    str[i] = '\0'; // Append string terminator
+ 
+    // Reverse the string
+    reverse(str, i);
+ 
+    return str;
+}
+
 void destroy_game_elements(ALLEGRO_TIMER *t, ALLEGRO_EVENT_QUEUE *ev_q, 
                               ALLEGRO_DISPLAY *d, ALLEGRO_BITMAP *icon)
 {
@@ -447,25 +502,25 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
             * W, A, S, D -> Movimentação do Jogador 01
             *          Z -> Ataque com Membro Superior 
             *          X -> Ataque com Membro Inferior */
-            if (ev.keyboard.keycode == ALLEGRO_KEY_A) joystick_left(p1->joystick);
-            else if (ev.keyboard.keycode == ALLEGRO_KEY_D) joystick_right(p1->joystick);
+            if      (ev.keyboard.keycode == ALLEGRO_KEY_A)    joystick_left(p1->joystick);
+            else if (ev.keyboard.keycode == ALLEGRO_KEY_D)    joystick_right(p1->joystick);
+            else if (ev.keyboard.keycode == ALLEGRO_KEY_W)    joystick_up(p1->joystick);
             if (p1->move != JUMPING){
-               if      (ev.keyboard.keycode == ALLEGRO_KEY_W) joystick_up(p1->joystick);
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_S) joystick_down(p1->joystick);
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_Z) { joystick_button_1(p1->joystick); p2->hit_points -= 5; }
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_X) { joystick_button_2(p1->joystick); p2->hit_points -= 2; }
+               if      (ev.keyboard.keycode == ALLEGRO_KEY_S) joystick_down(p1->joystick);
+               else if (ev.keyboard.keycode == ALLEGRO_KEY_Z) joystick_button_1(p1->joystick);
+               else if (ev.keyboard.keycode == ALLEGRO_KEY_X) joystick_button_2(p1->joystick);
             }
             /* Teclas do Jogador 02:
             * CIMA, ESQUERDA, BAIXO, DIREITA -> Movimentação do Jogador 02
             *                              K -> Ataque com Membro Superior 
             *                              L -> Ataque com Membro Inferior */
-            if (ev.keyboard.keycode == ALLEGRO_KEY_LEFT) joystick_left(p2->joystick);
+            if (ev.keyboard.keycode == ALLEGRO_KEY_LEFT)       joystick_left(p2->joystick);
             else if (ev.keyboard.keycode == ALLEGRO_KEY_RIGHT) joystick_right(p2->joystick);
+            else if (ev.keyboard.keycode == ALLEGRO_KEY_UP)    joystick_up(p2->joystick);
             if (p2->move != JUMPING){
-               if (ev.keyboard.keycode == ALLEGRO_KEY_UP)         joystick_up(p2->joystick);
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_DOWN)  joystick_down(p2->joystick);
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_K)     { joystick_button_1(p2->joystick); p1->hit_points -= 5; }
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_L)     { joystick_button_2(p2->joystick); p1->hit_points -= 2; }
+               if (ev.keyboard.keycode == ALLEGRO_KEY_DOWN)    joystick_down(p2->joystick);
+               else if (ev.keyboard.keycode == ALLEGRO_KEY_K)  joystick_button_1(p2->joystick);
+               else if (ev.keyboard.keycode == ALLEGRO_KEY_L)  joystick_button_2(p2->joystick);
             }
          }
          /* Evento 04: Atualização do Temporizador */
@@ -522,7 +577,7 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
 
             /* Calcula os segundos (de trás pra frente) do relógio */
             seconds = 60.0 - ceil(al_get_time() - clk_timer);
-            itoa(seconds, clk_string, 10);
+            citoa(seconds, clk_string, 10);
 
             /* Exibe o número do contador na tela */
             if (seconds >= 0){
@@ -546,11 +601,21 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
 
             al_flip_display();
          }
+         
+         /* -------------------------------------
+          * Tratamento de Movimentação e Colisões
+          * ------------------------------------- */
          update_player_movement(p1, p2);
          update_player_movement(p2, p1);
          
          update_player_coordinates(p1, p2);
          update_player_coordinates(p2, p1);
+
+         if (p1->move == ATTACKING_SUP || p1->move == ATTACKING_INF) execute_attack(p1, p2);
+         if (p2->move == ATTACKING_SUP || p2->move == ATTACKING_INF) execute_attack(p2, p1);
+
+         printf("\nP1 Movement: %d\n", p1->move);
+         printf("\nP2 Movement: %d\n", p2->move);
 
       }
 

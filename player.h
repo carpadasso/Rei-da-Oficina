@@ -55,6 +55,10 @@ Player* create_player(Character char_selected, int x, int y, int w, int h);
  * Libera memória de todos os atributos do Jogador. */
 void destroy_player(Player* player);
 
+bool is_area_colliding(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2);
+
+/* -------------------------------------------------------------------------- */
+
 /* update_player_movement:
  * Atualiza o movimento vigente do jogador baseado nos inputs
  * do joystick. */
@@ -64,6 +68,10 @@ void update_player_movement(Player* p1, Player* p2);
  * Atualiza as coordenadas do jogador baseado no movimento vigente. */
 void update_player_coordinates(Player* p1, Player* p2);
 
+void execute_attack(Player* p1, Player* p2);
+
+/* -------------------------------------------------------------------------- */
+
 void update_player_flags(Player* p1, Player* p2);
 
 /* draw_sprite_player:
@@ -72,7 +80,5 @@ void update_player_flags(Player* p1, Player* p2);
  * Retorna true caso seja necessário resetar o frame de animação, e 
  * false caso contrário. */
 bool draw_sprite_player(Player *player, float* frame);
-
-bool is_area_colliding(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2);
 
 #endif
