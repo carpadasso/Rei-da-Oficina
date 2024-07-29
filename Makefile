@@ -32,7 +32,7 @@ LIBS = -L/usr/lib -lallegro -lallegro_main -lallegro_font -lallegro_ttf \
 all: $(PROJECT)
 
 $(PROJECT): $(OBJ)
-	$(CC) -o $@ $^ $(LIBS)
+	$(CC) -o $@ $^ -lm $(LIBS)
 
 %.o: %.c
 	$(CC) $(CC_FLAGS) -o $@ $^ $(LIBS)

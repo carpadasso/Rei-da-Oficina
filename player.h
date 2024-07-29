@@ -16,9 +16,9 @@
 #define DEFAULT_HIT_POINTS 100
 #define STEP_FRONT         10
 #define STEP_BACK          5
-#define JUMP_VEL           27
+#define JUMP_VEL           5
 #define Y_MAX              DISPLAY_HEIGHT - 300
-#define Y_MIN              Y_MAX - 125
+#define Y_MIN              Y_MAX - 160
 
 /* Define a estrutura "Player"
  * selected_char: Personagem escolhido pelo jogador
@@ -34,7 +34,7 @@ typedef struct Player {
    int w, h;
    int hit_points;
    int pos_flag;
-   bool isJumping;
+   bool isJumping, isFalling;
    Character selected_char;
    Movement move;
    Joystick *joystick;
@@ -64,10 +64,14 @@ void update_player_movement(Player* p);
  * Atualiza as coordenadas do jogador baseado no movimento vigente. */
 void update_player_coordinates(Player* p);
 
+void update_player_flags(Player* p1, Player* p2);
+
 /* draw_sprite_player:
  * Seleciona o frame desejado baseado no estado atual do
- * jogador. */
-void draw_sprite_player(Player *player, unsigned short *frame);
+ * jogador.
+ * Retorna true caso seja necessário resetar o frame de animação, e 
+ * false caso contrário. */
+bool draw_sprite_player(Player *player, float* frame);
 
 bool is_area_colliding(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2);
 

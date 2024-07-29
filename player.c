@@ -1,6 +1,7 @@
 #include <allegro5/allegro5.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <math.h>
 
 #include "joystick.h"
 #include "sprite.h"
@@ -92,43 +93,42 @@ bool is_area_colliding(int x1, int y1, int w1, int h1, int x2, int y2, int w2, i
 
 void update_player_movement(Player* p)
 {
-   if (p->move != JUMPING && p->move != CROUCHING && p->move != ATTACKING_SUP && p->move != ATTACKING_INF){
-      /* Possibilidade 01: Parado 
-      * 1) Todos os inputs estão 0 
-      * 2) CIMA e BAIXO ativos
-      * 3) ESQUERDA e DIREITA ativos */
-      if (( !(p->joystick->up) && !(p->joystick->down) 
-            && !(p->joystick->left) && !(p->joystick->right) 
-            && !(p->joystick->button_1) && !(p->joystick->button_2) )
-            || (p->joystick->up && p->joystick->down)
-            || (p->joystick->left && p->joystick->right))
-         p->move = IDLE;
+   /* Possibilidade 01: Parado 
+   * 1) Todos os inputs estão 0 
+   * 2) CIMA e BAIXO ativos
+   * 3) ESQUERDA e DIREITA ativos */
+   if (( !(p->joystick->up) && !(p->joystick->down) 
+         && !(p->joystick->left) && !(p->joystick->right) 
+         && !(p->joystick->button_1) && !(p->joystick->button_2) )
+         || (p->joystick->up && p->joystick->down)
+         || (p->joystick->left && p->joystick->right))
+      p->move = IDLE;
 
-      /* Possibilidade 02: Andar Positivo */
-      else if (p->joystick->right)
-         p->move = WALKING_POSITIVE;
+   /* Possibilidade 02: Andar Positivo */
+   else if (p->joystick->right)
+      p->move = WALKING_POSITIVE;
 
-      /* Possibilidade 03: Andar Negativo */
-      else if (p->joystick->left)
-         p->move = WALKING_NEGATIVE;
+   /* Possibilidade 03: Andar Negativo */
+   else if (p->joystick->left)
+      p->move = WALKING_NEGATIVE;
+   
+   /* Possibilidade 04: Pular */
+   if (p->joystick->up && p->isJumping == false){
+      p->move = JUMPING;
+      p->isJumping = true;
    }
-   else {
-      /* Possibilidade 04: Pular */
-      if (p->joystick->up)
-         p->move = JUMPING;
 
-      /* Possibilidade 05: Agachar */
-      if (p->joystick->down)
-         p->move = CROUCHING;
+   /* Possibilidade 05: Agachar */
+   if (p->joystick->down)
+      p->move = CROUCHING;
 
-      /* Possibilidade 06: Ataque Superior */
-      if (p->joystick->button_1)
-         p->move = ATTACKING_SUP;
+   /* Possibilidade 06: Ataque Superior */
+   if (p->joystick->button_1)
+      p->move = ATTACKING_SUP;
 
-      /* Possibilidade 07: Ataque Inferior */
-      if (p->joystick->button_2)
-         p->move = ATTACKING_INF;
-   }
+   /* Possibilidade 07: Ataque Inferior */
+   if (p->joystick->button_2)
+      p->move = ATTACKING_INF;
 }
 
 void update_player_coordinates(Player* p)
@@ -158,7 +158,8 @@ void update_player_coordinates(Player* p)
     * Aqui as coisas complicam um pouco mais:
     * 1) Primeiro, verificamos se o jogador quer movimentar durante o pulo
     * 2) Segundo, verificamos se o jogador atingiu a altura máxima de um pulo
-    * (não queremos o jogador entrando em órbita), se ele já atingiu a 
+    * (não queremos o jogador entrando em órbita), se ele já atingiu a altura
+    * máxima, fazemos y = Y_MAX
     * 3) Ajustamos a coordenada y do jogador */
    else if (p->move == JUMPING){
       /* Parte 01: Movento Esquerda-Direita no meio do ar */
@@ -170,22 +171,17 @@ void update_player_coordinates(Player* p)
          if (p->pos_flag == 0) p->x += STEP_BACK;
          else p->x += STEP_FRONT;
       }
-      if (p->joystick->left && p->joystick->right){
-         if (p->pos_flag == 0) p->x -= (STEP_FRONT - STEP_BACK);
-         else p->x += (STEP_FRONT - STEP_BACK);
-      }
 
       /* Parte 02: Fazendo o jogador pular */
-      if (!(p->isJumping)){
-         if (p->y > Y_MIN) p->isJumping = true;
-         else p->y -= JUMP_VEL;
+      if (p->y >= Y_MAX){
+         p->y = Y_MAX;
+         p->move = IDLE;
       }
       else {
-         if (p->y < Y_MAX){
-            p->move = IDLE;
-            p->isJumping = false;
-         }
-         else p->y += JUMP_VEL;
+         if (p->y <= Y_MIN) p->isFalling = true;
+
+         if (p->isFalling) p->y += JUMP_VEL;
+         else p->y -= JUMP_VEL;
       }
    }
 }
@@ -193,29 +189,94 @@ void update_player_coordinates(Player* p)
 /* ------------------
  *   Player Sprite
  * ------------------ */
-void draw_sprite_player(Player* p, unsigned short *frame)
+void update_player_flags(Player* p1, Player* p2)
 {
-   int flag = p->pos_flag;
+   if (p1->x < p2->x){
+      p1->pos_flag = 0;
+      p2->pos_flag = ALLEGRO_FLIP_HORIZONTAL;
+   }
+   else {
+      p1->pos_flag = ALLEGRO_FLIP_HORIZONTAL;
+      p2->pos_flag = 0;
+   }
+}
+
+bool draw_sprite_player(Player* p, float* frame)
+{
    unsigned short gap;
+   int flag = p->pos_flag;
+   bool reset_frame = false;
 
    if (p->pos_flag == 0) gap = 0;
-   else gap = 60;
+   else gap = 70;
 
-   if (p->joystick->up)
-      al_draw_scaled_bitmap(p->sprites->jump, 0, 20, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
-   else if (p->joystick->left)
-      al_draw_scaled_bitmap(p->sprites->walking_neg, 0, 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
-   else if (p->joystick->right)
-      al_draw_scaled_bitmap(p->sprites->walking_pos, 0, 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
-   else if (p->joystick->down)
-      al_draw_scaled_bitmap(p->sprites->crouch, 0, 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
-   else if (p->joystick->button_1){
-      p->w = 110;
-      p->h = 95;
-      al_draw_scaled_bitmap(p->sprites->attack_sup, 70, 0, 110, 95, p->x - gap, p->y, 110*2.5, 95*2.5, flag);
+   /* Exibição de Sprites - RYU */
+   if (p->selected_char == RYU){
+      if (p->joystick->up){
+         if (*frame <= 6) *frame += 0.15;
+         else reset_frame = true;
+         al_draw_scaled_bitmap(p->sprites->jump, 70*(int)(*frame), 0, 70, 115, p->x, p->y - 50*(int)(*frame), 70*2.5, 95*2.5, flag);
+      }
+      else if ((p->joystick->left && p->pos_flag == 0) || (p->joystick->right && p->pos_flag == 1)){
+         if (*frame <= 5) *frame += 0.15;
+         else *frame = 0;
+         al_draw_scaled_bitmap(p->sprites->walking_neg, 70*(int)(*frame), 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
+      }
+      else if ((p->joystick->right && p->pos_flag == 0) || (p->joystick->left && p->pos_flag == 1)){
+         if (*frame <= 5) *frame += 0.15;
+         else *frame = 0;
+         al_draw_scaled_bitmap(p->sprites->walking_pos, 70*(int)(*frame), 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
+      }
+      else if (p->joystick->down){
+         al_draw_scaled_bitmap(p->sprites->crouch, 140, 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
+      }
+      else if (p->joystick->button_1){
+         al_draw_scaled_bitmap(p->sprites->attack_sup, 70, 0, 110, 95, p->x - gap, p->y, 110*2.5, 95*2.5, flag);
+      }
+      else if (p->joystick->button_2){
+         al_draw_scaled_bitmap(p->sprites->attack_inf, 140, 0, 90, 95, p->x - gap, p->y, 90*2.5, 95*2.5, flag);
+      }
+      else {
+         if (*frame <= 4) *frame += 0.15;
+         else *frame = 0;         
+         al_draw_scaled_bitmap(p->sprites->idle, 70*(int)(*frame), 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
+      }
    }
-   else if (p->joystick->button_2)
-      al_draw_scaled_bitmap(p->sprites->attack_inf, 140, 0, 90, 95, p->x - gap, p->y, 90*2.5, 95*2.5, flag);
-   else
-      al_draw_scaled_bitmap(p->sprites->idle, 0, 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
+   
+   /* Exibição de Sprites - KEN */
+   else if (p->selected_char == KEN){
+      if (p->joystick->up){
+         if (*frame <= 7) *frame += 0.15;
+         else reset_frame = true;
+
+         if (*frame <=4) al_draw_scaled_bitmap(p->sprites->jump, 70*(int)(*frame), 0, 70, 105, p->x, p->y - 50*(int)(*frame), 70*2.5, 95*2.5, flag);
+         else            al_draw_scaled_bitmap(p->sprites->jump, 70*(int)(*frame), 0, 70, 105, p->x, p->y, 70*2.5, 95*2.5, flag);
+      }
+      else if ((p->joystick->left && p->pos_flag == 0) || (p->joystick->right && p->pos_flag == 1)){
+         if (*frame <= 5) *frame += 0.15;
+         else *frame = 0;
+         al_draw_scaled_bitmap(p->sprites->walking_neg, 70*(int)(*frame), 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
+      }
+      else if ((p->joystick->right && p->pos_flag == 0) || (p->joystick->left && p->pos_flag == 1)){
+         if (*frame <= 5) *frame += 0.15;
+         else *frame = 0;
+         al_draw_scaled_bitmap(p->sprites->walking_pos, 70*(int)(*frame), 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
+      }
+      else if (p->joystick->down){
+         al_draw_scaled_bitmap(p->sprites->crouch, 140, 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
+      }
+      else if (p->joystick->button_1){
+         al_draw_scaled_bitmap(p->sprites->attack_sup, 70, 0, 105, 95, p->x - gap, p->y, 110*2.5, 95*2.5, flag);
+      }
+      else if (p->joystick->button_2){
+         al_draw_scaled_bitmap(p->sprites->attack_inf, 130, 0, 90, 95, p->x - gap, p->y, 90*2.5, 95*2.5, flag);
+      }
+      else {
+         if (*frame <= 5) *frame += 0.15;
+         else *frame = 0;
+         al_draw_scaled_bitmap(p->sprites->idle, 70*(int)(*frame), 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
+      }
+   }
+
+   return reset_frame;
 }
