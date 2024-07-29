@@ -379,12 +379,12 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
 
                if (ev.type == ALLEGRO_EVENT_KEY_DOWN){
                   /* Alterar entre as opções do Menu de Pause */
-                  if (ev.keyboard.keycode == ALLEGRO_KEY_UP){
+                  if (ev.keyboard.keycode == ALLEGRO_KEY_UP || ev.keyboard.keycode == ALLEGRO_KEY_W){
                      if (pause_opt == 0)      pause_opt = 2;
                      else if (pause_opt == 1) pause_opt = 0;
                      else if (pause_opt == 2) pause_opt = 1;
                   }
-                  if (ev.keyboard.keycode == ALLEGRO_KEY_DOWN){
+                  if (ev.keyboard.keycode == ALLEGRO_KEY_DOWN || ev.keyboard.keycode == ALLEGRO_KEY_S){
                      if (pause_opt == 0)      pause_opt = 1;
                      else if (pause_opt == 1) pause_opt = 2;
                      else if (pause_opt == 2) pause_opt = 0;
@@ -546,11 +546,11 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
 
             al_flip_display();
          }
-         update_player_movement(p1);
-         update_player_movement(p2);
+         update_player_movement(p1, p2);
+         update_player_movement(p2, p1);
          
-         update_player_coordinates(p1);
-         update_player_coordinates(p2);
+         update_player_coordinates(p1, p2);
+         update_player_coordinates(p2, p1);
 
       }
 

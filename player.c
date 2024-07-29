@@ -91,67 +91,69 @@ bool is_area_colliding(int x1, int y1, int w1, int h1, int x2, int y2, int w2, i
  *   Player Movement
  * ------------------ */
 
-void update_player_movement(Player* p)
+void update_player_movement(Player* p1, Player* p2)
 {
    /* Possibilidade 01: Parado 
    * 1) Todos os inputs estão 0 
    * 2) CIMA e BAIXO ativos
    * 3) ESQUERDA e DIREITA ativos */
-   if (( !(p->joystick->up) && !(p->joystick->down) 
-         && !(p->joystick->left) && !(p->joystick->right) 
-         && !(p->joystick->button_1) && !(p->joystick->button_2) )
-         || (p->joystick->up && p->joystick->down)
-         || (p->joystick->left && p->joystick->right))
-      p->move = IDLE;
+   if (( !(p1->joystick->up) && !(p1->joystick->down) 
+         && !(p1->joystick->left) && !(p1->joystick->right) 
+         && !(p1->joystick->button_1) && !(p1->joystick->button_2) )
+         || (p1->joystick->up && p1->joystick->down)
+         || (p1->joystick->left && p1->joystick->right))
+      p1->move = IDLE;
 
    /* Possibilidade 02: Andar Positivo */
-   else if (p->joystick->right)
-      p->move = WALKING_POSITIVE;
+   else if (p1->joystick->right)
+      p1->move = WALKING_POSITIVE;
 
    /* Possibilidade 03: Andar Negativo */
-   else if (p->joystick->left)
-      p->move = WALKING_NEGATIVE;
+   else if (p1->joystick->left)
+      p1->move = WALKING_NEGATIVE;
    
    /* Possibilidade 04: Pular */
-   if (p->joystick->up && p->isJumping == false){
-      p->move = JUMPING;
-      p->isJumping = true;
+   if (p1->joystick->up && p1->isJumping == true){
+      p1->move = JUMPING;
+      p1->isJumping = true;
    }
 
    /* Possibilidade 05: Agachar */
-   if (p->joystick->down)
-      p->move = CROUCHING;
+   if (p1->joystick->down)
+      p1->move = CROUCHING;
 
    /* Possibilidade 06: Ataque Superior */
-   if (p->joystick->button_1)
-      p->move = ATTACKING_SUP;
+   if (p1->joystick->button_1)
+      p1->move = ATTACKING_SUP;
 
    /* Possibilidade 07: Ataque Inferior */
-   if (p->joystick->button_2)
-      p->move = ATTACKING_INF;
+   if (p1->joystick->button_2)
+      p1->move = ATTACKING_INF;
 }
 
-void update_player_coordinates(Player* p)
+void update_player_coordinates(Player* p1, Player* p2)
 {
    /* Possibilidade 01: Jogador PARADO 
     * Se o jogador está parado, mantém as coordenadas */
-   if (p->move == IDLE)
+   if (p1->move == IDLE)
       return;
 
    /* Possibilidade 02: Jogador ANDANDO POSITIVO
     * Incrementa-se a coordenada x do jogador baseado na direção
     * que seu personagem está olhando. */
-   else if (p->move == WALKING_POSITIVE){
-      if (p->pos_flag == 0) p->x += STEP_FRONT;
-      else p->x += STEP_BACK;
+   else if (p1->move == WALKING_POSITIVE
+            && !is_area_colliding(p1->x - 50, p1->y, p1->w + 50, p1->h, p2->x, p2->y, p2->w, p2->h)){
+      if (p1->pos_flag == 0) p1->x += STEP_FRONT;
+      else p1->x += STEP_BACK;
    }
 
    /* Possibilidade 03: Jogador ANDANDO NEGATIVO
     * Decrementa-se a coordenada x do jogador baseado na direção
     * que seu personagem está olhando. */
-   else if (p->move == WALKING_NEGATIVE){
-      if (p->pos_flag == 0) p->x -= STEP_BACK;
-      else p->x -= STEP_FRONT;
+   else if (p1->move == WALKING_NEGATIVE
+            && !is_area_colliding(p1->x + STEP_FRONT, p1->y, p1->w, p1->h, p2->x, p2->y, p2->w, p2->h)){
+      if (p1->pos_flag == 0) p1->x -= STEP_BACK;
+      else p1->x -= STEP_FRONT;
    }
 
    /* Possibilidade 04: Jogador PULANDO 
@@ -161,29 +163,35 @@ void update_player_coordinates(Player* p)
     * (não queremos o jogador entrando em órbita), se ele já atingiu a altura
     * máxima, fazemos y = Y_MAX
     * 3) Ajustamos a coordenada y do jogador */
-   else if (p->move == JUMPING){
+   else if (p1->move == JUMPING){
       /* Parte 01: Movento Esquerda-Direita no meio do ar */
-      if (p->joystick->left){
-         if (p->pos_flag == 0) p->x -= STEP_FRONT;
-         else p->x -= STEP_BACK;
+      if (p1->joystick->left){
+         if (p1->pos_flag == 0) p1->x -= STEP_FRONT;
+         else p1->x -= STEP_BACK;
       }
-      if (p->joystick->right){
-         if (p->pos_flag == 0) p->x += STEP_BACK;
-         else p->x += STEP_FRONT;
+      if (p1->joystick->right){
+         if (p1->pos_flag == 0) p1->x += STEP_BACK;
+         else p1->x += STEP_FRONT;
       }
 
       /* Parte 02: Fazendo o jogador pular */
-      if (p->y >= Y_MAX){
-         p->y = Y_MAX;
-         p->move = IDLE;
+      if (p1->y >= Y_MAX){
+         p1->y = Y_MAX;
+         p1->move = IDLE;
+         p1->isFalling = false;
       }
       else {
-         if (p->y <= Y_MIN) p->isFalling = true;
+         if (p1->y <= Y_MIN) p1->isFalling = true;
 
-         if (p->isFalling) p->y += JUMP_VEL;
-         else p->y -= JUMP_VEL;
+         if (p1->isFalling) p1->y += JUMP_VEL;
+         else p1->y -= JUMP_VEL;
       }
    }
+
+   /* Limites da Tela: Corrige o problema do jogador
+    * ultrapassar os limites da tela, se escondendo no infinito */
+   if (p1->x < 0) p1->x = 0;
+   if (p1->x > 625) p1->x = 625;
 }
 
 /* ------------------
@@ -212,12 +220,14 @@ bool draw_sprite_player(Player* p, float* frame)
 
    /* Exibição de Sprites - RYU */
    if (p->selected_char == RYU){
+      /*
       if (p->joystick->up){
          if (*frame <= 6) *frame += 0.15;
          else reset_frame = true;
          al_draw_scaled_bitmap(p->sprites->jump, 70*(int)(*frame), 0, 70, 115, p->x, p->y - 50*(int)(*frame), 70*2.5, 95*2.5, flag);
       }
-      else if ((p->joystick->left && p->pos_flag == 0) || (p->joystick->right && p->pos_flag == 1)){
+      */
+      if ((p->joystick->left && p->pos_flag == 0) || (p->joystick->right && p->pos_flag == 1)){
          if (*frame <= 5) *frame += 0.15;
          else *frame = 0;
          al_draw_scaled_bitmap(p->sprites->walking_neg, 70*(int)(*frame), 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
@@ -245,6 +255,7 @@ bool draw_sprite_player(Player* p, float* frame)
    
    /* Exibição de Sprites - KEN */
    else if (p->selected_char == KEN){
+      /*
       if (p->joystick->up){
          if (*frame <= 7) *frame += 0.15;
          else reset_frame = true;
@@ -252,7 +263,8 @@ bool draw_sprite_player(Player* p, float* frame)
          if (*frame <=4) al_draw_scaled_bitmap(p->sprites->jump, 70*(int)(*frame), 0, 70, 105, p->x, p->y - 50*(int)(*frame), 70*2.5, 95*2.5, flag);
          else            al_draw_scaled_bitmap(p->sprites->jump, 70*(int)(*frame), 0, 70, 105, p->x, p->y, 70*2.5, 95*2.5, flag);
       }
-      else if ((p->joystick->left && p->pos_flag == 0) || (p->joystick->right && p->pos_flag == 1)){
+      */
+      if ((p->joystick->left && p->pos_flag == 0) || (p->joystick->right && p->pos_flag == 1)){
          if (*frame <= 5) *frame += 0.15;
          else *frame = 0;
          al_draw_scaled_bitmap(p->sprites->walking_neg, 70*(int)(*frame), 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);

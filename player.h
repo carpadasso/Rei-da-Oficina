@@ -58,11 +58,11 @@ void destroy_player(Player* player);
 /* update_player_movement:
  * Atualiza o movimento vigente do jogador baseado nos inputs
  * do joystick. */
-void update_player_movement(Player* p);
+void update_player_movement(Player* p1, Player* p2);
 
 /* update_player_coordinates: 
  * Atualiza as coordenadas do jogador baseado no movimento vigente. */
-void update_player_coordinates(Player* p);
+void update_player_coordinates(Player* p1, Player* p2);
 
 void update_player_flags(Player* p1, Player* p2);
 
