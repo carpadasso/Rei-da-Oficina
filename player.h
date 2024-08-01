@@ -13,7 +13,7 @@
 #define REFRESH_RATE   60.0
 
 /* Define constantes de Jogador */
-#define DEFAULT_HIT_POINTS 1000
+#define DEFAULT_HIT_POINTS 100
 #define STEP_FRONT         10
 #define STEP_BACK          5
 #define GRAVITY            9
@@ -32,21 +32,26 @@
  * h: Altura atual do sprite do jogador
  * hit_points: Pontos de vida atual do jogador */
 typedef struct Player {
+
    /* Coordenadas e Dimensões */
    int x, y, w, h;
    int x_hit, y_hit, w_hit, h_hit;
    int x_hurt, y_hurt, w_hurt, h_hurt;
    int hit_points;
+
    /* Flags */
    int pos_flag;
+   int enableJump, enableAtkSup, enableAtkInf;
    bool isJumping, isFalling, isAtkSup, isAtkInf, isCrouching;
-   bool enableJump, enableAtkSup, enableAtkInf;
+
    /* Variáveis Enumeráveis */
    Movement move;
    Character selected_char;
+
    /* Estruturas */
    Sprite *sprites;
    Joystick *joystick;
+
 } Player;
 
 /* -----------------------------

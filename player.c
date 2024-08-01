@@ -45,8 +45,8 @@ Player* create_player(Character character, int x0, int y0, int w0, int h0)
    new_player->isAtkSup  = new_player->isAtkInf  = false;
    new_player->isCrouching = false;
 
-   new_player->enableJump = true;
-   new_player->enableAtkSup = new_player->enableAtkInf = true;
+   new_player->enableJump = 0;
+   new_player->enableAtkSup = new_player->enableAtkInf = 0;
 
    /* Movimento inicial: Parado */
    new_player->move = IDLE;
@@ -358,10 +358,10 @@ bool draw_sprite_player(Player* p, float* frame)
       else if (p->joystick->down){
          al_draw_scaled_bitmap(p->sprites->crouch, 140, 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
       }
-      else if (p->joystick->button_1){
+      else if (p->joystick->button_1 || p->enableAtkSup == 1){
          al_draw_scaled_bitmap(p->sprites->attack_sup, 70, 0, 110, 95, p->x - gap, p->y, 110*2.5, 95*2.5, flag);
       }
-      else if (p->joystick->button_2){
+      else if (p->joystick->button_2 || p->enableAtkSup == 1){
          al_draw_scaled_bitmap(p->sprites->attack_inf, 140, 0, 90, 95, p->x - gap, p->y, 90*2.5, 95*2.5, flag);
       }
       else {
@@ -394,7 +394,7 @@ bool draw_sprite_player(Player* p, float* frame)
          al_draw_scaled_bitmap(p->sprites->crouch, 140, 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
       }
       else if (p->joystick->button_1){
-         al_draw_scaled_bitmap(p->sprites->attack_sup, 70, 0, 105, 95, p->x - gap, p->y, 110*2.5, 95*2.5, flag);
+         if (p->enableAtkSup) al_draw_scaled_bitmap(p->sprites->attack_sup, 70, 0, 105, 95, p->x - gap, p->y, 110*2.5, 95*2.5, flag);
       }
       else if (p->joystick->button_2){
          al_draw_scaled_bitmap(p->sprites->attack_inf, 130, 0, 90, 95, p->x - gap, p->y, 90*2.5, 95*2.5, flag);

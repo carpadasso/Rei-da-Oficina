@@ -109,12 +109,12 @@ void restart_round(Player* p1, Player* p2, float* clk_timer)
    p1->isAtkSup  = p1->isAtkInf  = false;
    p1->isJumping = p1->isFalling = false;
    p1->isCrouching = false;
-   p1->enableAtkSup = p1->enableAtkInf = p1->enableJump = true;
+   p1->enableAtkSup = p1->enableAtkInf = p1->enableJump = 0;
 
    p2->isAtkSup  = p2->isAtkInf  = false;
    p2->isJumping = p2->isFalling = false;
    p2->isCrouching = false;
-   p2->enableAtkSup = p2->enableAtkInf = p2->enableJump = true;
+   p2->enableAtkSup = p2->enableAtkInf = p2->enableJump = 0;
 
    /* ---------------------
     * Reinicialização do HP
@@ -205,7 +205,10 @@ int execMainMenu(ALLEGRO_EVENT_QUEUE *event_queue)
 int execSelectScreen(ALLEGRO_EVENT_QUEUE *event_queue, Character *char_p1, Character *char_p2,
                         ALLEGRO_BITMAP** stage)
 {
+   /* Variável de captura de evento
+    * da fila de eventos */
    ALLEGRO_EVENT event;
+
    bool closeGame = false;
 
    Player* p1 = create_player(RYU, 90, 250, 70, 95);
@@ -390,6 +393,8 @@ int execSelectScreen(ALLEGRO_EVENT_QUEUE *event_queue, Character *char_p1, Chara
 int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p2,
                   ALLEGRO_BITMAP* stage)
 {
+   /* Variável de captura de evento
+    * da fila de eventos */
    ALLEGRO_EVENT ev;
 
    /* Criação dos Jogadores */
@@ -401,28 +406,32 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
    ALLEGRO_FONT* fight_font_48 = al_load_ttf_font("./assets/font/Break Brush.ttf", 48, 0);
    ALLEGRO_FONT* fight_font_32 = al_load_ttf_font("./assets/font/Break Brush.ttf", 32, 0);
 
-   /* Imagem utilizada para transparência do Menu de Pause */
-   ALLEGRO_BITMAP* transparency = al_load_bitmap("./assets/screen.png");
-
-
+   /* Variável que guarda a coordenada x
+    * de corte do cenário de fundo */
    int x_stage;
 
-   /* frame_p1, frame_p2: Controla o frame a ser exibido do sprite 
-    * rounds_p1, rounds_p2: Controla quantos rounds cada jogador venceu
-    * gameFinished: Controla se o jogo acabou */
+   /* Contadores de Controle:
+    * frame_p1, frame_p2 - Controla o frame a ser exibido do sprite 
+    * rounds_p1, rounds_p2 - Controla quantos rounds cada jogador venceu */
    float frame_p1, frame_p2;
    unsigned short rounds_p1 = 0, rounds_p2 = 0;
 
-   bool finishedGame = false;
-   bool closeGame = false;
+   /* Flags de Controle:
+    * close_game - Controla se o jogo deve ser encerrado 
+    * finished_game - Controla se o fim de jogo aconteceu */
+   bool close_game = false;
+   bool finished_game = false;
+
+   /* Variáveis de Controle do CONTADOR:
+    * clk_timer: Captura o 'tempo inicial', isto é, t0 = 0 
+    * seconds: Controla quantos segundos se passaram no rounds 
+    * clk_string: Buffer para impressão do tempo na tela */
+   float clk_timer, seconds;
+   char clk_string[3];
 
    /* Variáveis de uso do Menu de Pause */
    unsigned short pause_opt = 0;
-
-   /* clk_timer: Controla o tempo de duração da batalha */
-   float seconds;
-   float clk_timer;
-   char clk_string[3];
+   ALLEGRO_BITMAP* transparency = al_load_bitmap("./assets/screen.png");
 
    /* ---------------
     * Loop da Partida
@@ -455,26 +464,32 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
          /* --------------------
           * Encerramento da Luta
           * -------------------- */
-         if (finishedGame){
+         if (finished_game){
             p1->move = p2->move = IDLE;
          }
 
          /* ---------------------
           * Tratamento de Eventos
           * --------------------- */
-         /* Evento 01: Encerrar o Programa */
+         /* Evento 01: Encerrar o Programa
+          * Fecha o jogo, simples assim. */
          if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE){
-            closeGame = true;
+            close_game = true;
             break;
          }
-         /* Evento 02: Menu de Pause */
-         else if (ev.type == ALLEGRO_EVENT_KEY_DOWN && ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE && !finishedGame){
+         
+         /* Evento 02: Menu de Pause 
+          * Realiza o congelamento da luta, dando opção aos jogadores de
+          * Retomar a Jogatina após uma pausa, Reiniciar a Luta caso algum dos
+          * jogadores ficou bravo com um dos rounds, ou Voltar ao Menu Inicial
+          * caso queiram trocar de personagens */
+         else if (ev.type == ALLEGRO_EVENT_KEY_DOWN && ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE && !finished_game){
             do 
             {
                al_wait_for_event(ev_queue, &ev);
 
                /* Fechar o Programa enquanto está pausado */
-               if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE){ closeGame = true; break; }
+               if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE){ close_game = true; break; }
 
                if (ev.type == ALLEGRO_EVENT_KEY_DOWN){
                   /* Alterar entre as opções do Menu de Pause */
@@ -540,10 +555,14 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
                al_flip_display();
             } while (ev.type != ALLEGRO_EVENT_KEY_DOWN || ev.keyboard.keycode != ALLEGRO_KEY_ESCAPE);
 
-            if (closeGame) break;
+            if (close_game) break;
          }
-         /* Evento 03: Inputs do Controle */
-         else if ((ev.type == ALLEGRO_EVENT_KEY_DOWN || ev.type == ALLEGRO_EVENT_KEY_UP) && !finishedGame){
+         
+         /* Evento 03: Inputs do Controle 
+          * Trata sobre o pressionar-soltar de uma tecla.
+          * Essa parte faz com que se registre APENAS se uma tecla está ativa
+          * ou não, ou seja, não contabiliza quantos segundos uma tecla está pressionada!! */
+         else if ((ev.type == ALLEGRO_EVENT_KEY_DOWN || ev.type == ALLEGRO_EVENT_KEY_UP) && !finished_game){
             /* ------------------
              * Botões do Controle
              * ------------------ */
@@ -569,39 +588,27 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
             else if (ev.keyboard.keycode == ALLEGRO_KEY_K)     joystick_button_1(p2->joystick);
             else if (ev.keyboard.keycode == ALLEGRO_KEY_L)     joystick_button_2(p2->joystick);
 
-            /* -----------------------------
-             * Tratamento de Flags de Enable
-             * ----------------------------- */
-            if (ev.type == ALLEGRO_EVENT_KEY_DOWN){
-               /* Flags do Jogador 01 */
-               if      (ev.keyboard.keycode == ALLEGRO_KEY_W) p1->enableJump   = false;
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_S) p1->isCrouching  = true;
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_Z) p1->enableAtkSup = false;
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_X) p1->enableAtkInf = false;
-
-               /* Flags do Jogador 02 */
-               if      (ev.keyboard.keycode == ALLEGRO_KEY_W) p1->enableJump   = false;
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_S) p1->isCrouching  = true;
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_Z) p1->enableAtkSup = false;
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_X) p1->enableAtkInf = false;
-            }
+            /* ------------------------
+             * Reset de Flags de Enable
+             * ------------------------ */
             if (ev.type == ALLEGRO_EVENT_KEY_UP){
-               /* Flags do Jogador 01 */
-               if      (ev.keyboard.keycode == ALLEGRO_KEY_UP) p1->enableJump   = true;
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_DOWN) p1->isCrouching  = false;
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_K) p1->enableAtkSup = true;
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_L) p1->enableAtkInf = true;
+               /* Flags de Enable do Jogador 01 */
+               if      (ev.keyboard.keycode == ALLEGRO_KEY_W) p1->enableJump   = 0;
+               else if (ev.keyboard.keycode == ALLEGRO_KEY_Z) p1->enableAtkSup = 0;
+               else if (ev.keyboard.keycode == ALLEGRO_KEY_X) p1->enableAtkInf = 0;
 
-               /* Flags do Jogador 02 */
-               if      (ev.keyboard.keycode == ALLEGRO_KEY_UP) p1->enableJump   = false;
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_DOWN) p1->isCrouching  = true;
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_K) p1->enableAtkSup = false;
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_L) p1->enableAtkInf = false;
+               /* Flags de Enable do Jogador 02 */
+               if      (ev.keyboard.keycode == ALLEGRO_KEY_UP) p2->enableJump   = 0;
+               else if (ev.keyboard.keycode == ALLEGRO_KEY_K)  p2->enableAtkSup = 0;
+               else if (ev.keyboard.keycode == ALLEGRO_KEY_L)  p2->enableAtkInf = 0;
             }
          }
-         /* Evento 04: Atualização do Temporizador */
+         
+         /* Evento 04: Atualização do Temporizador
+          * Aqui trata-se, de maior parte, sobre imprimir coisas na tela,
+          * como por exemplo os sprites dos jogadores, o cenário de fundo,
+          * as barras de vida, etc. */
          else if (ev.type == ALLEGRO_EVENT_TIMER){
-
             /* Exibição do Cenário de Fundo */
             al_draw_scaled_bitmap(stage, x_stage, 0, 300, 224, 0, 0, 800, 600, 0);
 
@@ -646,7 +653,7 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
             if (rounds_p2 >= 2) al_draw_filled_rectangle(489.5, 79.5, 499.5, 99.5, al_color_name("orange"));
             al_draw_rectangle(490.0, 80.0, 500.0, 100.0, al_color_name("white"), 3.0);
 
-            if (!finishedGame){
+            if (!finished_game){
                /* Contador de Tempo... (tic, tac...) */
                al_draw_text(fight_font_32, al_color_name("black"),  402.0, 32.0, ALLEGRO_ALIGN_CENTER, "Tempo");
                al_draw_text(fight_font_32, al_color_name("yellow"), 400.0, 30.0, ALLEGRO_ALIGN_CENTER, "Tempo");
@@ -673,7 +680,7 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
             }
 
             /* Fim da Luta */
-            if (finishedGame){
+            if (finished_game){
                al_draw_text(fight_font_48, al_color_name("black"), 402.0, 132.0, ALLEGRO_ALIGN_CENTER, "Resultado da Partida");
                al_draw_text(fight_font_48, al_color_name("white"), 400.0, 130.0, ALLEGRO_ALIGN_CENTER, "Resultado da Partida");
 
@@ -711,25 +718,39 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
             al_flip_display();
          }
          
-         /* -------------------------------------
-          * Tratamento de Movimentação e Colisões
-          * ------------------------------------- */
          /* Tenta mexer o cenário de fundo, mas o que faz de fato
           * é modificar a coordenada x do corte da imagem de fundo */
          if (  ((p1->move == WALKING_POSITIVE && p1->pos_flag == 1)
                || (p2->move == WALKING_POSITIVE && p2->pos_flag == 1))
-               && ((p1->x - p2->x <= DISPLAY_WIDTH - 70*2.5) || (p2->x - p1->x <= DISPLAY_WIDTH - 70*2.5))){
+               && ((p1->x - p2->x <= DISPLAY_WIDTH - 70*2.5) || (p2->x - p1->x <= DISPLAY_WIDTH - 70*2.5)) ){
                x_stage += 1;
                if (x_stage > al_get_bitmap_width(stage) - 300)
                   x_stage -= 1;
          }
          if (  ((p1->move == WALKING_NEGATIVE && p1->pos_flag == 0)
                || (p2->move == WALKING_NEGATIVE && p2->pos_flag == 0))
-               && ((p1->x - p2->x <= DISPLAY_WIDTH - 70*2.5) || (p2->x - p1->x <= DISPLAY_WIDTH - 70*2.5))){
+               && ((p1->x - p2->x <= DISPLAY_WIDTH - 70*2.5) || (p2->x - p1->x <= DISPLAY_WIDTH - 70*2.5)) ){
                x_stage -= 1;
                if (x_stage < 0)
                   x_stage += 1;
          }
+
+         /* ----------------------------
+         * Tratamento de Flags de Enable
+         * ----------------------------- */
+         /* Flags do Jogador 01 */
+         if      (p1->joystick->up       && p1->enableJump < 2)   p1->enableJump += 1;
+         else if (p1->joystick->button_1 && p1->enableAtkSup < 2) p1->enableAtkSup += 1;
+         else if (p1->joystick->button_2 && p1->enableAtkInf < 2) p1->enableAtkInf += 1;
+
+         /* Flags do Jogador 02 */
+         if      (p2->joystick->up       && p2->enableJump < 2)   p2->enableJump += 1;
+         else if (p2->joystick->button_1 && p2->enableAtkSup < 2) p2->enableAtkSup += 1;
+         else if (p2->joystick->button_2 && p2->enableAtkInf < 2) p2->enableAtkInf += 1;
+
+         /* ----------------------
+          * Movimentação e Ataques
+          * ---------------------- */
 
          /* Modificando a variável 'move' dos jogadores */
          update_player_movement(p1, p2);
@@ -751,15 +772,15 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
 
          /* Executa a matemática do ataque, baseado na colisão da hurtbox -> hitbox
           * Se a flag de enable não estiver ativa, não contabiliza o ataque */
-         if (p1->enableAtkSup || p1->enableAtkInf) execute_attack(p1, p2);
-         if (p2->enableAtkSup || p2->enableAtkInf) execute_attack(p2, p1);
+         if (p1->enableAtkSup == 1 || p1->enableAtkInf == 1) execute_attack(p1, p2);
+         if (p2->enableAtkSup == 1 || p2->enableAtkInf == 1) execute_attack(p2, p1);
       }
 
       /* Fim da Luta - Verifica se algum dos jogadores venceu 2 rounds
        * ou também se o jogo quer ser fechado, tornando a flag de fim de jogo verdadeira */
-      if (rounds_p1 == 2 || rounds_p2 == 2 || closeGame) finishedGame = true;
+      if (rounds_p1 == 2 || rounds_p2 == 2) finished_game = true;
 
-      if (closeGame) break;
+      if (close_game) break;
    }
 
    /* Destruição da Luta */
