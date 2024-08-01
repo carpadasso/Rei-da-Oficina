@@ -13,12 +13,14 @@
 #define REFRESH_RATE   60.0
 
 /* Define constantes de Jogador */
-#define DEFAULT_HIT_POINTS 100
+#define DEFAULT_HIT_POINTS 1000
 #define STEP_FRONT         10
 #define STEP_BACK          5
-#define JUMP_VEL           5
+#define GRAVITY            9
+#define X_MIN              0
+#define X_MAX              DISPLAY_WIDTH - 200
 #define Y_MAX              DISPLAY_HEIGHT - 300
-#define Y_MIN              Y_MAX - 160
+#define Y_MIN              Y_MAX - 250
 
 /* Define a estrutura "Player"
  * selected_char: Personagem escolhido pelo jogador
@@ -30,15 +32,21 @@
  * h: Altura atual do sprite do jogador
  * hit_points: Pontos de vida atual do jogador */
 typedef struct Player {
-   int x, y;
-   int w, h;
+   /* Coordenadas e Dimensões */
+   int x, y, w, h;
+   int x_hit, y_hit, w_hit, h_hit;
+   int x_hurt, y_hurt, w_hurt, h_hurt;
    int hit_points;
+   /* Flags */
    int pos_flag;
-   bool isJumping, isFalling;
-   Character selected_char;
+   bool isJumping, isFalling, isAtkSup, isAtkInf, isCrouching;
+   bool enableJump, enableAtkSup, enableAtkInf;
+   /* Variáveis Enumeráveis */
    Movement move;
-   Joystick *joystick;
+   Character selected_char;
+   /* Estruturas */
    Sprite *sprites;
+   Joystick *joystick;
 } Player;
 
 /* -----------------------------
@@ -49,7 +57,7 @@ typedef struct Player {
  * Aloca memória para um jogador recém criado.
  * Recebe e atribui os parâmetros do jogador fornecidos.
  * Retorna um ponteiro para a estrutura alocada. */
-Player* create_player(Character char_selected, int x, int y, int w, int h);
+Player* create_player(Character char_selected, int x0, int y0, int w0, int h0);
 
 /* destroy_player:
  * Libera memória de todos os atributos do Jogador. */
@@ -68,11 +76,13 @@ void update_player_movement(Player* p1, Player* p2);
  * Atualiza as coordenadas do jogador baseado no movimento vigente. */
 void update_player_coordinates(Player* p1, Player* p2);
 
+void update_player_boxes(Player* p, float frame);
+
 void execute_attack(Player* p1, Player* p2);
 
 /* -------------------------------------------------------------------------- */
 
-void update_player_flags(Player* p1, Player* p2);
+void update_player_pos_flags(Player* p1, Player* p2);
 
 /* draw_sprite_player:
  * Seleciona o frame desejado baseado no estado atual do

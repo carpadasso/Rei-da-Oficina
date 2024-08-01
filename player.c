@@ -11,22 +11,47 @@
  *   Create and Destroy
  * ------------------ */
 
-Player* create_player(Character character, int x, int y, int w, int h)
+Player* create_player(Character character, int x0, int y0, int w0, int h0)
 {
    /* Alocação de Memória */
    Player* new_player = (Player*) malloc(sizeof(Player));
    if (!new_player) return NULL;
 
-   /* Atribuição de valores */
+   /* Personagem */
    new_player->selected_char = character;
-   new_player->x = x;
-   new_player->y = y;
-   new_player->w = w;
-   new_player->h = h;
-   new_player->hit_points = DEFAULT_HIT_POINTS;
-   new_player->pos_flag = 0;
-   new_player->isJumping = false;
 
+   /* Coordenadas e Medidas */
+   new_player->x = x0;
+   new_player->y = y0;
+   new_player->w = w0;
+   new_player->h = h0;
+
+   new_player->x_hit = x0;
+   new_player->y_hit = y0;
+   new_player->w_hit = w0;
+   new_player->h_hit = h0;
+
+   new_player->x_hurt = x0;
+   new_player->y_hurt = y0;
+   new_player->w_hurt = w0;
+   new_player->h_hurt = h0;
+
+   /* Pontos de Vida */
+   new_player->hit_points = DEFAULT_HIT_POINTS;
+
+   /* Flags, Gotta capture'em all! */
+   new_player->pos_flag = 0;
+   new_player->isJumping = new_player->isFalling = false;
+   new_player->isAtkSup  = new_player->isAtkInf  = false;
+   new_player->isCrouching = false;
+
+   new_player->enableJump = true;
+   new_player->enableAtkSup = new_player->enableAtkInf = true;
+
+   /* Movimento inicial: Parado */
+   new_player->move = IDLE;
+
+   /* Estruturas */
    new_player->joystick = create_joystick();
    new_player->sprites = create_sprites(character);
 
@@ -95,7 +120,7 @@ void update_player_movement(Player* p1, Player* p2)
 {
 
    /* Possibilidade 01: Pular */
-   if (p1->joystick->up){
+   if (p1->joystick->up || p1->isJumping){
       p1->move = JUMPING;
    }
 
@@ -108,13 +133,13 @@ void update_player_movement(Player* p1, Player* p2)
       p1->move = WALKING_NEGATIVE;
 
    /* Possibilidade 04: Agachar */
-   else if (p1->joystick->down)
+   else if (p1->joystick->down){
       p1->move = CROUCHING;
-
+   }
    /* Possibilidade 05: Ataque Superior */
-   else if (p1->joystick->button_1)
+   else if (p1->joystick->button_1){
       p1->move = ATTACKING_SUP;
-
+   }
    /* Possibilidade 06: Ataque Inferior */
    else if (p1->joystick->button_2)
       p1->move = ATTACKING_INF;
@@ -129,7 +154,7 @@ void update_player_coordinates(Player* p1, Player* p2)
 {
    /* Possibilidade 01: Jogador PARADO 
     * Se o jogador está parado, mantém as coordenadas */
-   if (p1->move == IDLE)
+   if (p1->move == IDLE || p1->move == CROUCHING)
       return;
 
    /* Possibilidade 02: Jogador ANDANDO POSITIVO
@@ -137,10 +162,11 @@ void update_player_coordinates(Player* p1, Player* p2)
     * que seu personagem está olhando. */
    else if (p1->move == WALKING_POSITIVE){
       if (p1->pos_flag == 0) p1->x += STEP_FRONT;
-      else p1->x += STEP_BACK;
-      if (is_area_colliding(p1->x, p1->y, p1->w, p1->h, p2->x, p2->y, p2->w, p2->h)){
-         if (p1->pos_flag == 0) p1->x -= STEP_FRONT;
-         else p1->x -= STEP_BACK;
+      else                   p1->x += STEP_BACK;
+      if (is_area_colliding(p1->x_hit, p1->y_hit, floor(p1->w_hit*2.5), floor(p1->h_hit*2.5), 
+                            p2->x_hit, p2->y_hit, floor(p2->w_hit*2.5), floor(p2->h_hit*2.5))){
+         if (p1->pos_flag == 0) p1->x -= ceil(STEP_FRONT*2.5);
+         else                   p1->x -= ceil(STEP_BACK*2.5);
       }
    }
 
@@ -149,10 +175,11 @@ void update_player_coordinates(Player* p1, Player* p2)
     * que seu personagem está olhando. */
    else if (p1->move == WALKING_NEGATIVE){
       if (p1->pos_flag == 0) p1->x -= STEP_BACK;
-      else p1->x -= STEP_FRONT;
-      if (is_area_colliding(p1->x, p1->y, p1->w, p1->h, p2->x, p2->y, p2->w, p2->h)){
-         if (p1->pos_flag == 0) p1->x += STEP_BACK;
-         else p1->x += STEP_FRONT;
+      else                   p1->x -= STEP_FRONT;
+      if (is_area_colliding(p1->x_hit, p1->y_hit, floor(p1->w_hit*2.5), floor(p1->h_hit*2.5), 
+                            p2->x_hit, p2->y_hit, floor(p2->w_hit*2.5), floor(p2->h_hit*2.5))){
+         if (p1->pos_flag == 0) p1->x += ceil(STEP_BACK*2.5);
+         else                   p1->x += ceil(STEP_FRONT*2.5);
       }
    }
 
@@ -167,24 +194,29 @@ void update_player_coordinates(Player* p1, Player* p2)
       /* Parte 01: Movento Esquerda-Direita no meio do ar */
       if (p1->joystick->left){
          if (p1->pos_flag == 0) p1->x -= STEP_FRONT;
-         else p1->x -= STEP_BACK;
+         else                   p1->x -= STEP_BACK;
       }
       if (p1->joystick->right){
          if (p1->pos_flag == 0) p1->x += STEP_BACK;
-         else p1->x += STEP_FRONT;
+         else                   p1->x += STEP_FRONT;
       }
 
       /* Parte 02: Fazendo o jogador pular */
-      if (p1->y >= Y_MAX){
-         p1->y = Y_MAX;
-         p1->move = IDLE;
-         p1->isFalling = false;
-      }
-      else {
-         if (p1->y <= Y_MIN) p1->isFalling = true;
+      if (p1->isJumping){
+         if (p1->y > Y_MAX){
+            p1->y = Y_MAX;
+            p1->move = IDLE;
+            p1->isJumping = false;
+            p1->isFalling = false;
+         }
 
-         if (p1->isFalling) p1->y += JUMP_VEL;
-         else p1->y -= JUMP_VEL;
+         if (p1->y < Y_MIN){
+            p1->y = Y_MIN;
+            p1->isFalling = true;
+         }
+
+         if (p1->isFalling) p1->y += GRAVITY;
+         else               p1->y -= GRAVITY;
       }
    }
 
@@ -194,41 +226,96 @@ void update_player_coordinates(Player* p1, Player* p2)
    if (p1->x > 625) p1->x = 625;
 }
 
-void execute_attack(Player* p1, Player* p2)
+/* LEMBRETE PARA AMANHÃ (30/07)
+ * As coordenadas de Hitbox e Hurtbox TEM
+ * que ser atualizadas a cada iteração!! */
+void update_player_boxes(Player* p, float frame)
 {
-   int gap;
+   /* Distância que corrige o problema do soco/chute
+    * do jogador da direita, que vai para trás ao invés
+    * de socar/chutar para frente */
+   int gap_punch_RYU = (p->pos_flag == 0) ? 0 : 280;
+   int gap_punch_KEN = (p->pos_flag == 0) ? 0 : 290;
 
-   /* Verifica se o golpe é "válido", isto é,
-    * se o J1 der um soco e o J2 estiver agachado, em teoria
-    * o soco não deveria contar. O mesmo vale para o chute + pulo. */
-   if (!(p1->move == ATTACKING_SUP && p2->move != CROUCHING) && !(p1->move == ATTACKING_INF && p2->move != JUMPING))
-      return;
-   
-   if (p1->pos_flag == 0)      gap = 0;
-   else if (p1->pos_flag == 1) gap = 70;
+   int gap_kick_RYU = (p->pos_flag == 0) ? 0 : 250;
+   int gap_kick_KEN = (p->pos_flag == 0) ? 0 : 240;
 
-   if (p1->selected_char == RYU){
-      if (p1->move == ATTACKING_SUP){
-         if (is_area_colliding(p1->x - gap, p1->y, p1->w, p1->h, p2->x, p2->y, p2->w, p2->h)) p2->hit_points -= 5;
+   /* ----------------------
+    * Atualização da Hurtbox
+    * ---------------------- */
+   /* Jogador realiza um Soco */
+   if (p->move == ATTACKING_SUP){
+      if (p->selected_char == RYU){
+         p->x_hurt = p->x - gap_punch_RYU + 230;
+         p->y_hurt = p->y + 45;
+         p->w_hurt = 10;
+         p->h_hurt = 10;
       }
-      if (p1->move == ATTACKING_INF){
-         if (is_area_colliding(p1->x - gap, p1->y, p1->w, p1->h, p2->x, p2->y, p2->w, p2->h)) p2->hit_points -= 2;
+      else if (p->selected_char == KEN){
+         p->x_hurt = p->x - gap_punch_KEN + 235;
+         p->y_hurt = p->y + 45;
+         p->w_hurt = 10;
+         p->h_hurt = 10;
       }
    }
-   else if (p1->selected_char == KEN){
-      if (p1->move == ATTACKING_SUP){
-         if (is_area_colliding(p1->x - gap, p1->y, p1->w, p1->h, p2->x, p2->y, p2->w, p2->h)) p2->hit_points -= 5;
+   /* Jogador realiza um Chute */
+   else if (p->move == ATTACKING_INF){
+      if (p->selected_char == RYU){
+         p->x_hurt = p->x - gap_kick_RYU + 190;
+         p->y_hurt = p->y + 145;
+         p->w_hurt = 10;
+         p->h_hurt = 10;
       }
-      if (p1->move == ATTACKING_INF){
-         if (is_area_colliding(p1->x - gap, p1->y, p1->w, p1->h, p2->x, p2->y, p2->w, p2->h)) p2->hit_points -= 2;
+      if (p->selected_char == KEN){
+         p->x_hurt = p->x - gap_kick_KEN + 185;
+         p->y_hurt = p->y + 150;
+         p->w_hurt = 10;
+         p->h_hurt = 10;
       }
+   }
+   else {
+      p->x_hurt = p->x + 15;
+      p->y_hurt = p->y + 15;
+      p->w_hurt = 70 - 15;
+      p->h_hurt = 95 - 15;
+   }
+
+   /* ---------------------
+    * Atualização da Hitbox
+    * --------------------- */
+   /* Jogador está Agachado */
+   if (p->move == CROUCHING){
+      p->x_hit = p->x + 25;
+      p->y_hit = p->y + 70 + 25;
+      p->w_hit = 70 - 25;
+      p->h_hit = 65 - 25;
+   }
+   else {
+      p->x_hit = p->x + 25;
+      p->y_hit = p->y + 25;
+      p->w_hit = 70 - 25;
+      p->h_hit = 95 - 25;
+   }
+}
+
+void execute_attack(Player* p1, Player* p2)
+{
+   if (p1->move == ATTACKING_SUP){
+      if (is_area_colliding(p1->x_hurt, p1->y_hurt, ceil(p1->w_hurt*2.5), ceil(p1->h_hurt*2.5), 
+                            p2->x_hit,  p2->y_hit,  ceil(p2->w_hit*2.5),  ceil(p2->h_hit*2.5)))
+         p2->hit_points -= 5;
+   }
+   if (p1->move == ATTACKING_INF){
+      if (is_area_colliding(p1->x_hurt, p1->y_hurt, ceil(p1->w_hurt*2.5), ceil(p1->h_hurt*2.5), 
+                            p2->x_hit,  p2->y_hit,  ceil(p2->w_hit*2.5),  ceil(p2->h_hit*2.5)))
+         p2->hit_points -= 2;
    }
 }
 
 /* ------------------
  *   Player Sprite
  * ------------------ */
-void update_player_flags(Player* p1, Player* p2)
+void update_player_pos_flags(Player* p1, Player* p2)
 {
    if (p1->x < p2->x){
       p1->pos_flag = 0;
@@ -251,14 +338,14 @@ bool draw_sprite_player(Player* p, float* frame)
 
    /* Exibição de Sprites - RYU */
    if (p->selected_char == RYU){
-      /*
-      if (p->joystick->up){
+      if (p->isJumping){
          if (*frame <= 6) *frame += 0.15;
          else reset_frame = true;
-         al_draw_scaled_bitmap(p->sprites->jump, 70*(int)(*frame), 0, 70, 115, p->x, p->y - 50*(int)(*frame), 70*2.5, 95*2.5, flag);
+         
+         if (*frame <= 3) al_draw_scaled_bitmap(p->sprites->jump, 70*(int)(*frame), 0, 70, 115, p->x, p->y - 50*(int)(*frame), 70*2.5, 115*2.5, flag);
+         else             al_draw_scaled_bitmap(p->sprites->jump, 70*(int)(*frame), 0, 70, 115, p->x, p->y, 70*2.5, 115*2.5, flag);
       }
-      */
-      if ((p->joystick->left && p->pos_flag == 0) || (p->joystick->right && p->pos_flag == 1)){
+      else if ((p->joystick->left && p->pos_flag == 0) || (p->joystick->right && p->pos_flag == 1)){
          if (*frame <= 5) *frame += 0.15;
          else *frame = 0;
          al_draw_scaled_bitmap(p->sprites->walking_neg, 70*(int)(*frame), 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
@@ -286,16 +373,14 @@ bool draw_sprite_player(Player* p, float* frame)
    
    /* Exibição de Sprites - KEN */
    else if (p->selected_char == KEN){
-      /*
-      if (p->joystick->up){
+      if (p->isJumping){
          if (*frame <= 7) *frame += 0.15;
          else reset_frame = true;
 
          if (*frame <=4) al_draw_scaled_bitmap(p->sprites->jump, 70*(int)(*frame), 0, 70, 105, p->x, p->y - 50*(int)(*frame), 70*2.5, 95*2.5, flag);
          else            al_draw_scaled_bitmap(p->sprites->jump, 70*(int)(*frame), 0, 70, 105, p->x, p->y, 70*2.5, 95*2.5, flag);
       }
-      */
-      if ((p->joystick->left && p->pos_flag == 0) || (p->joystick->right && p->pos_flag == 1)){
+      else if ((p->joystick->left && p->pos_flag == 0) || (p->joystick->right && p->pos_flag == 1)){
          if (*frame <= 5) *frame += 0.15;
          else *frame = 0;
          al_draw_scaled_bitmap(p->sprites->walking_neg, 70*(int)(*frame), 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
