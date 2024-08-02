@@ -377,8 +377,8 @@ bool draw_sprite_player(Player* p, float* frame)
          if (*frame <= 7) *frame += 0.15;
          else reset_frame = true;
 
-         if (*frame <=4) al_draw_scaled_bitmap(p->sprites->jump, 70*(int)(*frame), 0, 70, 105, p->x, p->y - 50*(int)(*frame), 70*2.5, 95*2.5, flag);
-         else            al_draw_scaled_bitmap(p->sprites->jump, 70*(int)(*frame), 0, 70, 105, p->x, p->y, 70*2.5, 95*2.5, flag);
+         if (*frame <= 4) al_draw_scaled_bitmap(p->sprites->jump, 70*(int)(*frame), 0, 70, 105, p->x, p->y - 50*(int)(*frame), 70*2.5, 95*2.5, flag);
+         else             al_draw_scaled_bitmap(p->sprites->jump, 70*(int)(*frame), 0, 70, 105, p->x, p->y, 70*2.5, 95*2.5, flag);
       }
       else if ((p->joystick->left && p->pos_flag == 0) || (p->joystick->right && p->pos_flag == 1)){
          if (*frame <= 5) *frame += 0.15;
@@ -393,8 +393,8 @@ bool draw_sprite_player(Player* p, float* frame)
       else if (p->joystick->down){
          al_draw_scaled_bitmap(p->sprites->crouch, 140, 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
       }
-      else if (p->joystick->button_1){
-         if (p->enableAtkSup) al_draw_scaled_bitmap(p->sprites->attack_sup, 70, 0, 105, 95, p->x - gap, p->y, 110*2.5, 95*2.5, flag);
+      else if (p->enableAtkSup >= 1 && p->enableAtkSup <= 10){
+         al_draw_scaled_bitmap(p->sprites->attack_sup, 70, 0, 105, 95, p->x - gap, p->y, 110*2.5, 95*2.5, flag);
       }
       else if (p->joystick->button_2){
          al_draw_scaled_bitmap(p->sprites->attack_inf, 130, 0, 90, 95, p->x - gap, p->y, 90*2.5, 95*2.5, flag);

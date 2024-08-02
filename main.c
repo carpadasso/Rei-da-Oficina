@@ -17,6 +17,7 @@
 
 #include "enums.h"
 #include "joystick.h"
+#include "stage.h"
 #include "player.h"
 
 /* --------------------------------
@@ -203,19 +204,22 @@ int execMainMenu(ALLEGRO_EVENT_QUEUE *event_queue)
 }
 
 int execSelectScreen(ALLEGRO_EVENT_QUEUE *event_queue, Character *char_p1, Character *char_p2,
-                        ALLEGRO_BITMAP** stage)
+                        Stage** stage)
 {
    /* Variável de captura de evento
     * da fila de eventos */
-   ALLEGRO_EVENT event;
+   ALLEGRO_EVENT ev;
 
-   bool closeGame = false;
+   bool close_game = false;
 
-   Player* p1 = create_player(RYU, 90, 250, 70, 95);
+   Player* p1 = create_player(RYU,  90, 250, 70, 95);
    Player* p2 = create_player(KEN, 540, 250, 70, 95);
 
-   ALLEGRO_BITMAP* stage01 = al_load_bitmap("./assets/background/city_stage.jpg");
-   ALLEGRO_BITMAP* stage02 = al_load_bitmap("./assets/background/ryu_stage.png");
+   Stage* amazon_preview = create_stage(AMAZON);
+   Stage* construction_preview = create_stage(CONSTRUCTION);
+   Stage* factory_preview = create_stage(FACTORY);
+   Stage* market_preview = create_stage(MARKET);
+   Stage* stage_preview = amazon_preview;
 
    /* Fonte utilizada na Seleção de Personagem */
    ALLEGRO_FONT* bg_select_32 = al_load_ttf_font("./assets/font/Fatal Fighter.ttf", 32, 0);
@@ -256,40 +260,73 @@ int execSelectScreen(ALLEGRO_EVENT_QUEUE *event_queue, Character *char_p1, Chara
 
    float frame = 0.0;
 
-   *stage = stage01;
    while (true)
    {
-      al_wait_for_event(event_queue, &event);
+      al_wait_for_event(event_queue, &ev);
 
       /* Evento 01:
        * Encerramento do Jogo */
-      if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE){
-         closeGame = true;
+      if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE){
+         close_game = true;
          break;
       }
-      else if (event.type == ALLEGRO_EVENT_KEY_DOWN){
-         if (event.keyboard.keycode == ALLEGRO_KEY_LEFT || event.keyboard.keycode == ALLEGRO_KEY_RIGHT){
+      else if (ev.type == ALLEGRO_EVENT_KEY_DOWN){
+         if (ev.keyboard.keycode == ALLEGRO_KEY_LEFT || ev.keyboard.keycode == ALLEGRO_KEY_RIGHT){
             if (option == 0){
                frame = 0;
                gamemode = gamemode ^ 1;
             }
-            else {
-               *stage = (sel_stage == 0) ? stage02 : stage01;
-               sel_stage = sel_stage ^ 1;
+            else if (option == 1){
+               if (ev.keyboard.keycode == ALLEGRO_KEY_LEFT){
+                  if      (sel_stage == 0){
+                     sel_stage = 3;
+                     *stage = stage_preview = market_preview;
+                  }
+                  else if (sel_stage == 1){
+                     sel_stage = 0;
+                     *stage = stage_preview = amazon_preview;
+                  }
+                  else if (sel_stage == 2){
+                     sel_stage = 1;
+                     *stage = stage_preview = construction_preview;
+                  }
+                  else if (sel_stage == 3){
+                     sel_stage = 2;
+                     *stage = stage_preview = factory_preview;
+                  }
+               }
+               if (ev.keyboard.keycode == ALLEGRO_KEY_RIGHT){
+                  if      (sel_stage == 0){
+                     sel_stage = 1;
+                     *stage = stage_preview = construction_preview;
+                  }
+                  else if (sel_stage == 1){
+                     sel_stage = 2;
+                     *stage = stage_preview = factory_preview;
+                  }
+                  else if (sel_stage == 2){
+                     sel_stage = 3;
+                     *stage = stage_preview = market_preview;
+                  }
+                  else if (sel_stage == 3){
+                     sel_stage = 0;
+                     *stage = stage_preview = amazon_preview;
+                  }
+               }
             }
          }
-         else if (event.keyboard.keycode == ALLEGRO_KEY_UP || event.keyboard.keycode == ALLEGRO_KEY_DOWN){
+         else if (ev.keyboard.keycode == ALLEGRO_KEY_UP || ev.keyboard.keycode == ALLEGRO_KEY_DOWN){
             option = option ^ 1;
          }
-         else if (event.keyboard.keycode == ALLEGRO_KEY_ENTER){
-            if (gamemode == 0){ *char_p1 = RYU; *char_p2 = KEN; }
-            else              { *char_p1 = KEN; *char_p2 = RYU; }
+         else if (ev.keyboard.keycode == ALLEGRO_KEY_ENTER){
+            if      (gamemode == 0){ *char_p1 = RYU; *char_p2 = KEN; }
+            else if (gamemode == 1){ *char_p1 = KEN; *char_p2 = RYU; }
             break;
          }
       }
       /* Evento 02:
        * Atualização do Temporizador */
-      else if (event.type == ALLEGRO_EVENT_TIMER){
+      else if (ev.type == ALLEGRO_EVENT_TIMER){
          al_clear_to_color(al_map_rgb(34, 35, 36));
 
          /* --- --- Início da Rotação --- --- */
@@ -312,7 +349,7 @@ int execSelectScreen(ALLEGRO_EVENT_QUEUE *event_queue, Character *char_p1, Chara
          /* --- --- Fim da Rotação --- --- */
 
          /* Estágio de Fundo selecionado */
-         al_draw_scaled_bitmap(*stage, 200, 25, 300, 200, 80, 60, 640, 480, 0);
+         draw_stage(stage_preview, 80, 60, 640, 480);
          al_draw_rectangle(80, 60, 800-80, 600-60, al_map_rgb(23, 24, 25), 5);
 
          /* ------------------
@@ -346,17 +383,29 @@ int execSelectScreen(ALLEGRO_EVENT_QUEUE *event_queue, Character *char_p1, Chara
             al_draw_text(font_select_32, cor,   400, 480, ALLEGRO_ALIGN_CENTER, "< KEN vs. RYU >");
          }
 
-         if (sel_stage == 0){
+         if      (sel_stage == 0){
             if (option == 1) cor = amarelo;
             else cor = branco;
-            al_draw_text(font_select_32, preto, 402, 552, ALLEGRO_ALIGN_CENTER, "< CIDADE JAPONESA>");
-            al_draw_text(font_select_32, cor,   400, 550, ALLEGRO_ALIGN_CENTER, "< CIDADE JAPONESA>");
+            al_draw_text(font_select_32, preto, 402, 552, ALLEGRO_ALIGN_CENTER, "< FLORESTA AMAZONICA >");
+            al_draw_text(font_select_32, cor,   400, 550, ALLEGRO_ALIGN_CENTER, "< FLORESTA AMAZONICA >");
          } 
          else if (sel_stage == 1){
             if (option == 1) cor = amarelo;
             else cor = branco;
-            al_draw_text(font_select_32, preto, 402, 552, ALLEGRO_ALIGN_CENTER, "< CASTELO SUZAKU >");
-            al_draw_text(font_select_32, cor,   400, 550, ALLEGRO_ALIGN_CENTER, "< CASTELO SUZAKU >");
+            al_draw_text(font_select_32, preto, 402, 552, ALLEGRO_ALIGN_CENTER, "< CANTEIRO DE OBRAS >");
+            al_draw_text(font_select_32, cor,   400, 550, ALLEGRO_ALIGN_CENTER, "< CANTEIRO DE OBRAS >");
+         }
+         else if (sel_stage == 2){
+            if (option == 1) cor = amarelo;
+            else cor = branco;
+            al_draw_text(font_select_32, preto, 402, 552, ALLEGRO_ALIGN_CENTER, "< USINA EM CHAMAS >");
+            al_draw_text(font_select_32, cor,   400, 550, ALLEGRO_ALIGN_CENTER, "< USINA EM CHAMAS >");
+         }
+         else if (sel_stage == 3){
+            if (option == 1) cor = amarelo;
+            else cor = branco;
+            al_draw_text(font_select_32, preto, 402, 552, ALLEGRO_ALIGN_CENTER, "< MERCADINHO >");
+            al_draw_text(font_select_32, cor,   400, 550, ALLEGRO_ALIGN_CENTER, "< MERCADINHO >");
          }
 
          /* -------------------------------------------
@@ -379,19 +428,24 @@ int execSelectScreen(ALLEGRO_EVENT_QUEUE *event_queue, Character *char_p1, Chara
    /* Destruição dos Elementos da Tela de Seleção */
    destroy_player(p1);
    destroy_player(p2);
-   if (*stage != stage01) al_destroy_bitmap(stage01);
-   if (*stage != stage02) al_destroy_bitmap(stage02);
+
+   if (*stage != amazon_preview)       destroy_stage(amazon_preview);
+   if (*stage != construction_preview) destroy_stage(construction_preview);
+   if (*stage != factory_preview)      destroy_stage(factory_preview);
+   if (*stage != market_preview)       destroy_stage(market_preview);
+
    al_destroy_font(bg_select_32);
    al_destroy_font(font_select_48);
    al_destroy_font(font_select_32);
+
    al_stop_sample(&sel_music_id); 
    al_destroy_sample(sel_music);
 
-   return closeGame;
+   return close_game;
 }
 
 int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p2,
-                  ALLEGRO_BITMAP* stage)
+                  Stage* stage)
 {
    /* Variável de captura de evento
     * da fila de eventos */
@@ -406,9 +460,7 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
    ALLEGRO_FONT* fight_font_48 = al_load_ttf_font("./assets/font/Break Brush.ttf", 48, 0);
    ALLEGRO_FONT* fight_font_32 = al_load_ttf_font("./assets/font/Break Brush.ttf", 32, 0);
 
-   /* Variável que guarda a coordenada x
-    * de corte do cenário de fundo */
-   int x_stage;
+   Stage* stage_teste = create_stage(AMAZON);
 
    /* Contadores de Controle:
     * frame_p1, frame_p2 - Controla o frame a ser exibido do sprite 
@@ -442,7 +494,7 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
        * os elementos da luta: jogadores e contador */
       frame_p1 = 0;
       frame_p2 = 0;
-      x_stage = 250;
+      stage->stage_x = al_get_bitmap_width(stage->stage_sprite) / 2;
       restart_round(p1, p2, &clk_timer);
 
       /* Execução do Round - Aqui acontece o tratamento de inputs 
@@ -513,7 +565,7 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
                      if (pause_opt == 1){
                         rounds_p1 = rounds_p2 = 0;
                         frame_p1  = frame_p2  = 0;
-                        x_stage   = 250;
+                        stage->stage_x = al_get_bitmap_width(stage->stage_sprite) / 2;
                         restart_round(p1, p2, &clk_timer);
                         break;
                      }
@@ -522,10 +574,10 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
                      if (pause_opt == 2){
                         destroy_player(p1);
                         destroy_player(p2);
+                        destroy_stage(stage);
                         al_destroy_font(fight_font_60);
                         al_destroy_font(fight_font_48);
                         al_destroy_font(fight_font_32);
-                        al_destroy_bitmap(stage);
                         al_destroy_bitmap(transparency);
 
                         return 0;
@@ -610,7 +662,7 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
           * as barras de vida, etc. */
          else if (ev.type == ALLEGRO_EVENT_TIMER){
             /* Exibição do Cenário de Fundo */
-            al_draw_scaled_bitmap(stage, x_stage, 0, 300, 224, 0, 0, 800, 600, 0);
+            draw_stage(stage, 0, 0, 800, 600);
 
             /* Exibição dos Nomes dos Personagens */
             if (p1->selected_char == RYU){
@@ -722,17 +774,19 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
           * é modificar a coordenada x do corte da imagem de fundo */
          if (  ((p1->move == WALKING_POSITIVE && p1->pos_flag == 1)
                || (p2->move == WALKING_POSITIVE && p2->pos_flag == 1))
-               && ((p1->x - p2->x <= DISPLAY_WIDTH - 70*2.5) || (p2->x - p1->x <= DISPLAY_WIDTH - 70*2.5)) ){
-               x_stage += 1;
-               if (x_stage > al_get_bitmap_width(stage) - 300)
-                  x_stage -= 1;
+               && ((p1->x - p2->x <= DISPLAY_WIDTH - 70*2.5) || (p2->x - p1->x <= DISPLAY_WIDTH - 70*2.5))
+               && ((p1->x > X_MAX) || (p2->x > X_MAX)) ){
+               stage->stage_x += 1;
+               if (stage->stage_x > al_get_bitmap_width(stage_teste->stage_sprite) - 300)
+                  stage->stage_x -= 1;
          }
          if (  ((p1->move == WALKING_NEGATIVE && p1->pos_flag == 0)
                || (p2->move == WALKING_NEGATIVE && p2->pos_flag == 0))
-               && ((p1->x - p2->x <= DISPLAY_WIDTH - 70*2.5) || (p2->x - p1->x <= DISPLAY_WIDTH - 70*2.5)) ){
-               x_stage -= 1;
-               if (x_stage < 0)
-                  x_stage += 1;
+               && ((p1->x - p2->x <= DISPLAY_WIDTH - 70*2.5) || (p2->x - p1->x <= DISPLAY_WIDTH - 70*2.5))
+               && ((p1->x < 20) || (p2->x < 20)) ){
+               stage->stage_x -= 1;
+               if (stage->stage_x < 0)
+                  stage->stage_x += 1;
          }
 
          /* ----------------------------
@@ -745,7 +799,7 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
 
          /* Flags do Jogador 02 */
          if      (p2->joystick->up       && p2->enableJump < 2)   p2->enableJump += 1;
-         else if (p2->joystick->button_1 && p2->enableAtkSup < 2) p2->enableAtkSup += 1;
+         else if (p2->joystick->button_1 && p2->enableAtkSup < 5) p2->enableAtkSup += 1;
          else if (p2->joystick->button_2 && p2->enableAtkInf < 2) p2->enableAtkInf += 1;
 
          /* ----------------------
@@ -786,10 +840,10 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
    /* Destruição da Luta */
    destroy_player(p1);
    destroy_player(p2);
+   destroy_stage(stage);
    al_destroy_font(fight_font_60);
    al_destroy_font(fight_font_48);
    al_destroy_font(fight_font_32);
-   al_destroy_bitmap(stage);
    al_destroy_bitmap(transparency);
 
    return 1;
@@ -800,7 +854,7 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
 int main(int argc, char* argv[])
 {
    /* Variáveis de uso geral */
-   ALLEGRO_BITMAP* stage;
+   Stage* stage;
    Character char_p1, char_p2;
 
    /* Inits necessários */
