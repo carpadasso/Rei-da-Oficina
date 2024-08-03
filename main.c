@@ -460,8 +460,6 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
    ALLEGRO_FONT* fight_font_48 = al_load_ttf_font("./assets/font/Break Brush.ttf", 48, 0);
    ALLEGRO_FONT* fight_font_32 = al_load_ttf_font("./assets/font/Break Brush.ttf", 32, 0);
 
-   Stage* stage_teste = create_stage(AMAZON);
-
    /* Contadores de Controle:
     * frame_p1, frame_p2 - Controla o frame a ser exibido do sprite 
     * rounds_p1, rounds_p2 - Controla quantos rounds cada jogador venceu */
@@ -749,20 +747,20 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
             /* Exibição dos Sprites dos Jogadores */
 
             /* Hitbox: P1 */
-            al_draw_rectangle(p1->x_hit, p1->y_hit, p1->x_hit+(p1->w_hit*2.5), 
-                              p1->y_hit+(p1->h_hit*2.5), al_color_name("blue"), 1.0);
+            //al_draw_rectangle(p1->x_hit, p1->y_hit, p1->x_hit+(p1->w_hit*2.5), 
+                              //p1->y_hit+(p1->h_hit*2.5), al_color_name("blue"), 1.0);
 
             /* Hitbox: P2 */
-            al_draw_rectangle(p2->x_hit-0.5, p2->y_hit-0.5, p2->x_hit+(p2->w_hit*2.5)+0.5, 
-                              p2->y_hit+(p2->h_hit*2.5)+0.5, al_color_name("blue"), 1.0);
+            //al_draw_rectangle(p2->x_hit-0.5, p2->y_hit-0.5, p2->x_hit+(p2->w_hit*2.5)+0.5, 
+                              //p2->y_hit+(p2->h_hit*2.5)+0.5, al_color_name("blue"), 1.0);
 
             /* Hurtbox: P1 */
-            al_draw_rectangle(p1->x_hurt-0.5, p1->y_hurt-0.5, p1->x_hurt+(p1->w_hurt*2.5)+0.5, 
-                              p1->y_hurt+(p1->h_hurt*2.5)+0.5, al_color_name("red"), 1.0);
+            //al_draw_rectangle(p1->x_hurt-0.5, p1->y_hurt-0.5, p1->x_hurt+(p1->w_hurt*2.5)+0.5, 
+                              //p1->y_hurt+(p1->h_hurt*2.5)+0.5, al_color_name("red"), 1.0);
 
             /* Hurtbox: P2 */
-            al_draw_rectangle(p2->x_hurt-0.5, p2->y_hurt-0.5, p2->x_hurt+(p2->w_hurt*2.5)+0.5, 
-                              p2->y_hurt+(p2->h_hurt*2.5)+0.5, al_color_name("red"), 1.0);
+            //al_draw_rectangle(p2->x_hurt-0.5, p2->y_hurt-0.5, p2->x_hurt+(p2->w_hurt*2.5)+0.5, 
+                              //p2->y_hurt+(p2->h_hurt*2.5)+0.5, al_color_name("red"), 1.0);
             
             if (draw_sprite_player(p1, &frame_p1)) frame_p1 = 0;
             if (draw_sprite_player(p2, &frame_p2)) frame_p2 = 0;
@@ -772,21 +770,21 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
          
          /* Tenta mexer o cenário de fundo, mas o que faz de fato
           * é modificar a coordenada x do corte da imagem de fundo */
-         if (  ((p1->move == WALKING_POSITIVE && p1->pos_flag == 1)
-               || (p2->move == WALKING_POSITIVE && p2->pos_flag == 1))
+         if (  ((p1->move == WALK_POSITIVE && p1->pos_flag == 1)
+               || (p2->move == WALK_POSITIVE && p2->pos_flag == 1))
                && ((p1->x - p2->x <= DISPLAY_WIDTH - 70*2.5) || (p2->x - p1->x <= DISPLAY_WIDTH - 70*2.5))
                && ((p1->x > X_MAX) || (p2->x > X_MAX)) ){
-               stage->stage_x += 1;
-               if (stage->stage_x > al_get_bitmap_width(stage_teste->stage_sprite) - 300)
-                  stage->stage_x -= 1;
+               stage->stage_x += 2;
+               if (stage->stage_x > al_get_bitmap_width(stage->stage_sprite) - 300)
+                  stage->stage_x -= 2;
          }
-         if (  ((p1->move == WALKING_NEGATIVE && p1->pos_flag == 0)
-               || (p2->move == WALKING_NEGATIVE && p2->pos_flag == 0))
+         if (  ((p1->move == WALK_NEGATIVE && p1->pos_flag == 0)
+               || (p2->move == WALK_NEGATIVE && p2->pos_flag == 0))
                && ((p1->x - p2->x <= DISPLAY_WIDTH - 70*2.5) || (p2->x - p1->x <= DISPLAY_WIDTH - 70*2.5))
                && ((p1->x < 20) || (p2->x < 20)) ){
-               stage->stage_x -= 1;
+               stage->stage_x -= 2;
                if (stage->stage_x < 0)
-                  stage->stage_x += 1;
+                  stage->stage_x += 2;
          }
 
          /* ----------------------------
@@ -811,8 +809,8 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
          update_player_movement(p2, p1);
          
          /* Modifica a Flag de Pulo */
-         if (p1->move == JUMPING && !p1->isJumping) p1->isJumping = true;
-         if (p2->move == JUMPING && !p2->isJumping) p2->isJumping = true;
+         if (p1->move == JUMP && !p1->isJumping) p1->isJumping = true;
+         if (p2->move == JUMP && !p2->isJumping) p2->isJumping = true;
 
          /* Modifica as coordenadas dos jogadores baseado no movimento,
           * ou seja, realiza de fato o movimento dos jogadores */
@@ -821,8 +819,8 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
 
          /* Modifica as hitboxes + hurtboxes dos jogadores baseado no
           * que eles estão fazendo, se estão pulando, agachando ou golpeando */
-         update_player_boxes(p1, frame_p1);
-         update_player_boxes(p2, frame_p2);
+         update_player_boxes(p1);
+         update_player_boxes(p2);
 
          /* Executa a matemática do ataque, baseado na colisão da hurtbox -> hitbox
           * Se a flag de enable não estiver ativa, não contabiliza o ataque */
@@ -840,10 +838,13 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
    /* Destruição da Luta */
    destroy_player(p1);
    destroy_player(p2);
+
    destroy_stage(stage);
+
    al_destroy_font(fight_font_60);
    al_destroy_font(fight_font_48);
    al_destroy_font(fight_font_32);
+
    al_destroy_bitmap(transparency);
 
    return 1;

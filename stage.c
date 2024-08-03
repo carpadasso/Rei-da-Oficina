@@ -1,4 +1,4 @@
-#include <allegro5/allegro.h>
+#include <allegro5/allegro5.h>
 #include "stage.h"
 
 /* Cria uma estrutura Cenário */
@@ -8,25 +8,25 @@ Stage* create_stage(Stage_Name stage_name)
    if (!s) return NULL;
 
    if (stage_name == AMAZON){
-      s->stage_sprite = al_load_bitmap("./assets/background/stage_amazon.jpg");
+      s->stage_sprite = al_load_bitmap("./assets/background/stage_amazon.png");
       s->stage_w = STAGE_W_AMAZON;
       s->stage_h = STAGE_H_AMAZON;
       s->stage_num_frame = STAGE_N_FRAME_AMAZON;
    }
    else if (stage_name == CONSTRUCTION){
-      s->stage_sprite = al_load_bitmap("./assets/background/stage_construction.jpg");
+      s->stage_sprite = al_load_bitmap("./assets/background/stage_construction.png");
       s->stage_w = STAGE_W_CONSTRUCTION;
       s->stage_h = STAGE_H_CONSTRUCTION;
       s->stage_num_frame = STAGE_N_FRAME_CONSTRUCTION;
    }
    else if (stage_name == FACTORY){
-      s->stage_sprite = al_load_bitmap("./assets/background/stage_factory.jpg");
+      s->stage_sprite = al_load_bitmap("./assets/background/stage_factory.png");
       s->stage_w = STAGE_W_FACTORY;
       s->stage_h = STAGE_H_FACTORY;
       s->stage_num_frame = STAGE_N_FRAME_FACTORY;
    }
    else if (stage_name == MARKET){
-      s->stage_sprite = al_load_bitmap("./assets/background/stage_market.bmp");
+      s->stage_sprite = al_load_bitmap("./assets/background/stage_market.png");
       s->stage_w = STAGE_W_MARKET;
       s->stage_h = STAGE_H_MARKET;
       s->stage_num_frame = STAGE_N_FRAME_MARKET;

@@ -22,12 +22,17 @@ typedef enum {
  * sendo realizado pelo jogador no instante. */
 typedef enum {
    IDLE,
-   WALKING_POSITIVE,
-   WALKING_NEGATIVE,
-   JUMPING,
-   CROUCHING,
-   ATTACKING_SUP,
-   ATTACKING_INF
+   WALK_POSITIVE,
+   WALK_NEGATIVE,
+   JUMP,
+   CROUCH,
+   ATTACK_MP,
+   ATTACK_LP,
+   ATTACK_HP,
+   ATTACK_MK,
+   ATTACK_LK,
+   ATTACK_HK,
+   ATTACK_SP
 } Movement;
 
 #endif

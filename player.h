@@ -81,7 +81,7 @@ void update_player_movement(Player* p1, Player* p2);
  * Atualiza as coordenadas do jogador baseado no movimento vigente. */
 void update_player_coordinates(Player* p1, Player* p2);
 
-void update_player_boxes(Player* p, float frame);
+void update_player_boxes(Player* p);
 
 void execute_attack(Player* p1, Player* p2);
 

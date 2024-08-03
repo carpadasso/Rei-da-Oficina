@@ -6,22 +6,28 @@
 
 #include "enums.h"
 
-/* Estrutura "Sprite"
- * > idle: Animação quando não há comandos
- * > walking_pos: Animação de andar em direção ao jogador adversário
- * > walking_neg: Animação de andar contra o jogador adversário
- * > jump: Animação de pulo
- * > crouch: Animação de abaixar-se
- * > attack_sup: Animação de ataque com membros superiores
- * > attack_inf: Animação de ataque com membros inferiores */
+/* Struct Sprite */
 struct Sprite_st {
-   ALLEGRO_BITMAP* idle;
-   ALLEGRO_BITMAP* walking_pos;
-   ALLEGRO_BITMAP* walking_neg;
+   /* Sprite de SOCO*/
+   ALLEGRO_BITMAP* attack_hp;
+   ALLEGRO_BITMAP* attack_mp;
+   ALLEGRO_BITMAP* attack_lp;
+
+   /* Sprite de CHUTE */
+   ALLEGRO_BITMAP* attack_hk;
+   ALLEGRO_BITMAP* attack_mk;
+   ALLEGRO_BITMAP* attack_lk;
+
+   /* PULO e AGACHAMENTO */
    ALLEGRO_BITMAP* jump;
    ALLEGRO_BITMAP* crouch;
-   ALLEGRO_BITMAP* attack_sup;
-   ALLEGRO_BITMAP* attack_inf;
+
+   /* Andar */
+   ALLEGRO_BITMAP* idle;
+   ALLEGRO_BITMAP* walk_positive;
+   ALLEGRO_BITMAP* walk_negative;
+
+   float frame;
 };
 typedef struct Sprite_st Sprite;
 
