@@ -4,6 +4,7 @@
 #include <allegro5/allegro5.h>
 
 #include "enums.h"
+#include "shot.h"
 #include "joystick.h"
 #include "sprite.h"
 
@@ -14,6 +15,7 @@
 
 /* Define constantes de Jogador */
 #define DEFAULT_HIT_POINTS 100
+#define DEFAULT_POW_POINTS 3
 #define STEP_FRONT         10
 #define STEP_BACK          5
 #define GRAVITY            9
@@ -37,12 +39,12 @@ typedef struct Player {
    int x, y, w, h;
    int x_hit, y_hit, w_hit, h_hit;
    int x_hurt, y_hurt, w_hurt, h_hurt;
-   int hit_points;
+   int hit_points, power_points;
 
    /* Flags */
    int pos_flag;
-   int enableJump, enableAtkSup, enableAtkInf;
-   bool isJumping, isFalling, isAtkSup, isAtkInf, isCrouching;
+   int enable_jump, enable_atk_p, enable_atk_k, enable_atk_sp;
+   bool is_jumping, is_falling;
 
    /* Variáveis Enumeráveis */
    Movement move;
@@ -51,6 +53,7 @@ typedef struct Player {
    /* Estruturas */
    Sprite *sprites;
    Joystick *joystick;
+   Shot* shot;
 
 } Player;
 
@@ -95,5 +98,17 @@ void update_player_pos_flags(Player* p1, Player* p2);
  * Retorna true caso seja necessário resetar o frame de animação, e 
  * false caso contrário. */
 bool draw_sprite_player(Player *player, float* frame);
+
+/* -------------------------------------------------------------------------- */
+
+void spawn_player_shot(Player* p);
+
+void show_shot(Player* p);
+
+void move_shot(Player* p);
+
+bool verify_damage_shot(Shot* shot, Player* p);
+
+void despawn_player_shot(Player* p);
 
 #endif

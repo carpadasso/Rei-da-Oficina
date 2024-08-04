@@ -4,12 +4,17 @@
 #include "enums.h"
 #include "sprite.h"
 
+/* ----------------
+ * Criar e Destruir
+ * ---------------- */
 Sprite* create_sprites(Character fighter_selected)
 {
    Sprite* sprites = (Sprite*) malloc(sizeof(Sprite));
    if (sprites == NULL) return NULL;
 
    if (fighter_selected == RYU){
+      sprites->attack_sp     = al_load_bitmap("./assets/characters/ryu/attack_sp.png");
+
       sprites->attack_hp     = al_load_bitmap("./assets/characters/ryu/attack_hp.png");
       sprites->attack_mp     = al_load_bitmap("./assets/characters/ryu/attack_mp.png");
       sprites->attack_lp     = al_load_bitmap("./assets/characters/ryu/attack_lp.png");
@@ -25,7 +30,10 @@ Sprite* create_sprites(Character fighter_selected)
       sprites->walk_positive = al_load_bitmap("./assets/characters/ryu/walk_positive.png");
       sprites->walk_negative = al_load_bitmap("./assets/characters/ryu/walk_negative.png");
    }
+
    else if (fighter_selected == KEN){
+      sprites->attack_sp     = al_load_bitmap("./assets/characters/ken/attack_sp.png");
+
       sprites->attack_hp     = al_load_bitmap("./assets/characters/ken/attack_hp.png");
       sprites->attack_mp     = al_load_bitmap("./assets/characters/ken/attack_mp.png");
       sprites->attack_lp     = al_load_bitmap("./assets/characters/ken/attack_lp.png");
@@ -41,6 +49,7 @@ Sprite* create_sprites(Character fighter_selected)
       sprites->walk_positive = al_load_bitmap("./assets/characters/ken/walk_positive.png");
       sprites->walk_negative = al_load_bitmap("./assets/characters/ken/walk_negative.png");
    }
+
    else {
       free(sprites); sprites = NULL;
    }

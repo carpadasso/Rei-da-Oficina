@@ -4,12 +4,13 @@
 #include <math.h>
 
 #include "joystick.h"
+#include "shot.h"
 #include "sprite.h"
 #include "player.h"
 
-/* ------------------
- *   Create and Destroy
- * ------------------ */
+/* ----------------
+ * Criar e Destruir
+ * ---------------- */
 Player* create_player(Character character, int x0, int y0, int w0, int h0)
 {
    /* Teste de Sanidade... */
@@ -38,17 +39,17 @@ Player* create_player(Character character, int x0, int y0, int w0, int h0)
    new_player->w_hurt = w0;
    new_player->h_hurt = h0;
 
-   /* Pontos de Vida */
-   new_player->hit_points = DEFAULT_HIT_POINTS;
+   /* Pontos de Habilidade */
+   new_player->hit_points   = DEFAULT_HIT_POINTS;
+   new_player->power_points = DEFAULT_POW_POINTS;
 
    /* Flags, Gotta capture'em all! */
    new_player->pos_flag = 0;
-   new_player->isJumping = new_player->isFalling = false;
-   new_player->isAtkSup  = new_player->isAtkInf  = false;
-   new_player->isCrouching = false;
+   new_player->is_jumping = new_player->is_falling = false;
 
-   new_player->enableJump = 0;
-   new_player->enableAtkSup = new_player->enableAtkInf = 0;
+   new_player->enable_jump = 0;
+   new_player->enable_atk_p = new_player->enable_atk_k = 0;
+   new_player->enable_atk_sp = 0;
 
    /* Movimento inicial: Parado */
    new_player->move = IDLE;
@@ -56,6 +57,7 @@ Player* create_player(Character character, int x0, int y0, int w0, int h0)
    /* Estruturas */
    new_player->joystick = create_joystick();
    new_player->sprites = create_sprites(character);
+   new_player->shot = NULL;
 
    return new_player;
 }
@@ -72,9 +74,9 @@ void destroy_player(Player *player)
    free(player); player = NULL;
 }
 
-/* -------------------
- *   Player Collision
- * ------------------- */
+/* ------------------
+ * Cálculo de Colisão
+ * ------------------ */
 bool is_area_colliding(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2)
 {
    /* Colisão de Área 01 -> Área 02 */
@@ -116,20 +118,20 @@ bool is_area_colliding(int x1, int y1, int w1, int h1, int x2, int y2, int w2, i
    return false;
 }
 
-/* ------------------
- *   Player Movement
- * ------------------ */
+/* -----------------------
+ * Movimentação de JOGADOR
+ * ----------------------- */
 void update_player_movement(Player* p1, Player* p2)
 {
    /* Teste de Sanidade... */
    if (p1 == NULL || p2 == NULL) return;
 
    /* Movimentos realizados PULANDO */
-   if      ((p1->joystick->up || p1->isJumping) && p1->joystick->button_1)
+   if      ((p1->joystick->up || p1->is_jumping) && p1->joystick->button_1)
       p1->move = ATTACK_HP;
-   else if ((p1->joystick->up || p1->isJumping) && p1->joystick->button_2)
+   else if ((p1->joystick->up || p1->is_jumping) && p1->joystick->button_2)
       p1->move = ATTACK_HK;
-   else if ((p1->joystick->up || p1->isJumping))
+   else if ((p1->joystick->up || p1->is_jumping))
       p1->move = JUMP;
 
    /* Movimentos realizados AGACHADO */
@@ -140,6 +142,10 @@ void update_player_movement(Player* p1, Player* p2)
    else if (p1->joystick->down)
       p1->move = CROUCH;
 
+   /* Ataque Especial */
+   else if (p1->joystick->button_3)
+      p1->move = ATTACK_SP;
+   
    /* Ataques Padrão */
    else if (p1->joystick->button_1)
       p1->move = ATTACK_MP;
@@ -211,21 +217,21 @@ void update_player_coordinates(Player* p1, Player* p2)
       }
 
       /* Parte 02: Fazendo o jogador pular */
-      if (p1->isJumping){
+      if (p1->is_jumping){
          if (p1->y > Y_MAX){
             p1->y = Y_MAX;
             p1->move = IDLE;
-            p1->isJumping = false;
-            p1->isFalling = false;
+            p1->is_jumping = false;
+            p1->is_falling = false;
          }
 
          if (p1->y < Y_MIN){
             p1->y = Y_MIN;
-            p1->isFalling = true;
+            p1->is_falling = true;
          }
 
-         if (p1->isFalling) p1->y += GRAVITY;
-         else               p1->y -= GRAVITY;
+         if (p1->is_falling) p1->y += GRAVITY;
+         else                p1->y -= GRAVITY;
       }
    }
 
@@ -430,9 +436,9 @@ void execute_attack(Player* p1, Player* p2)
    }
 }
 
-/* ------------------
- *   Player Sprite
- * ------------------ */
+/* -------------------
+ * Exibição de JOGADOR
+ * ------------------- */
 void update_player_pos_flags(Player* p1, Player* p2)
 {
    if (p1->x < p2->x){
@@ -462,7 +468,7 @@ bool draw_sprite_player(Player* p, float* frame)
       /* ------------------------
        * Exibição de Movimentação
        * ------------------------ */
-      if (p->move == JUMP && p->isJumping){
+      if (p->move == JUMP && p->is_jumping){
          if (*frame <= 6) *frame += 0.15;
          else reset_frame = true;
          
@@ -486,30 +492,37 @@ bool draw_sprite_player(Player* p, float* frame)
       else if (p->move == CROUCH){
          al_draw_scaled_bitmap(p->sprites->crouch, 140, 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
       }
+      
+      /* ---------------------------
+       * Exibição de Ataque Especial
+       * --------------------------- */
+      else if (p->move == ATTACK_SP){
+         al_draw_scaled_bitmap(p->sprites->attack_sp, 290, 0, 115, 95, p->x - gap, p->y, 115*2.5, 95*2.5, flag);
+      }
 
       /* ---------------------------
        * Exibição de Ataques de SOCO
        * --------------------------- */
-      else if ((p->move == ATTACK_HP || p->enableAtkSup == 1) && p->isJumping){
+      else if ((p->move == ATTACK_HP || p->enable_atk_p == 1) && p->is_jumping){
          al_draw_scaled_bitmap(p->sprites->attack_hp, 150, 0, 100, 115, p->x - gap, p->y, 100*2.5, 115*2.5, flag);
       }
-      else if ((p->move == ATTACK_MP || p->enableAtkSup == 1)){
+      else if ((p->move == ATTACK_MP || p->enable_atk_p == 1)){
          al_draw_scaled_bitmap(p->sprites->attack_mp, 70, 0, 110, 95, p->x - gap, p->y, 110*2.5, 95*2.5, flag);
       }
-      else if ((p->move == ATTACK_LP || p->enableAtkSup == 1)){
+      else if ((p->move == ATTACK_LP || p->enable_atk_p == 1)){
          al_draw_scaled_bitmap(p->sprites->attack_lp, 80, 0, 105, 95, p->x - gap, p->y, 105*2.5, 95*2.5, flag);
       }
 
       /* ----------------------------
        * Exibição de Ataques de CHUTE
        * ---------------------------- */
-      else if ((p->move == ATTACK_HK || p->enableAtkInf == 1) && p->isJumping){
+      else if ((p->move == ATTACK_HK || p->enable_atk_k == 1) && p->is_jumping){
          al_draw_scaled_bitmap(p->sprites->attack_hk, 70, 0, 85, 115, p->x - gap, p->y, 85*2.5, 115*2.5, flag);
       }
-      else if ((p->move == ATTACK_MK || p->enableAtkInf == 1)){
+      else if ((p->move == ATTACK_MK || p->enable_atk_k == 1)){
          al_draw_scaled_bitmap(p->sprites->attack_mk, 140, 0, 90, 95, p->x - gap, p->y, 90*2.5, 95*2.5, flag);
       }
-      else if ((p->move == ATTACK_LK || p->enableAtkInf == 1)){
+      else if ((p->move == ATTACK_LK || p->enable_atk_k == 1)){
          al_draw_scaled_bitmap(p->sprites->attack_lk, 190, 0, 150, 95, p->x - gap, p->y, 150*2.5, 95*2.5, flag);
       }
 
@@ -532,7 +545,7 @@ bool draw_sprite_player(Player* p, float* frame)
       /* ------------------------
        * Exibição de Movimentação
        * ------------------------ */
-      if (p->move == JUMP && p->isJumping){
+      if (p->move == JUMP && p->is_jumping){
          if (*frame <= 7) *frame += 0.15;
          else reset_frame = true;
 
@@ -558,28 +571,35 @@ bool draw_sprite_player(Player* p, float* frame)
       }
 
       /* ---------------------------
+       * Exibição de Ataque Especial
+       * --------------------------- */
+      else if (p->move == ATTACK_SP){
+         al_draw_scaled_bitmap(p->sprites->attack_sp, 290, 0, 115, 95, p->x - gap, p->y, 115*2.5, 95*2.5, flag);
+      }
+
+      /* ---------------------------
        * Exibição de Ataques de SOCO
        * --------------------------- */
-      else if ((p->move == ATTACK_HP || p->enableAtkSup == 1) && p->isJumping){
+      else if ((p->move == ATTACK_HP || p->enable_atk_p == 1) && p->is_jumping){
          al_draw_scaled_bitmap(p->sprites->attack_hp, 150, 0, 100, 115, p->x - gap, p->y, 100*2.5, 115*2.5, flag);
       }
-      else if ((p->move == ATTACK_MP || p->enableAtkSup == 1)){
+      else if ((p->move == ATTACK_MP || p->enable_atk_p == 1)){
          al_draw_scaled_bitmap(p->sprites->attack_mp, 70, 0, 105, 95, p->x - gap, p->y, 110*2.5, 95*2.5, flag);
       }
-      else if ((p->move == ATTACK_LP || p->enableAtkSup == 1)){
+      else if ((p->move == ATTACK_LP || p->enable_atk_p == 1)){
          al_draw_scaled_bitmap(p->sprites->attack_lp, 80, 0, 105, 95, p->x - gap, p->y, 105*2.5, 95*2.5, flag);
       }
 
       /* ----------------------------
        * Exibição de Ataques de CHUTE
        * ---------------------------- */
-      else if ((p->move == ATTACK_HK || p->enableAtkInf == 1) && p->isJumping){
+      else if ((p->move == ATTACK_HK || p->enable_atk_k == 1) && p->is_jumping){
          al_draw_scaled_bitmap(p->sprites->attack_hk, 70, 0, 85, 115, p->x - gap, p->y, 85*2.5, 115*2.5, flag);
       }
-      else if ((p->move == ATTACK_MK || p->enableAtkInf == 1)){
+      else if ((p->move == ATTACK_MK || p->enable_atk_k == 1)){
          al_draw_scaled_bitmap(p->sprites->attack_mk, 130, 0, 90, 95, p->x - gap, p->y, 90*2.5, 95*2.5, flag);
       }
-      else if ((p->move == ATTACK_LK || p->enableAtkInf == 1)){
+      else if ((p->move == ATTACK_LK || p->enable_atk_k == 1)){
          al_draw_scaled_bitmap(p->sprites->attack_lk, 190, 0, 150, 95, p->x - gap, p->y, 150*2.5, 95*2.5, flag);
       }
 
@@ -595,4 +615,54 @@ bool draw_sprite_player(Player* p, float* frame)
    }
 
    return reset_frame;
+}
+
+/* ------------------
+ * DISPARO de JOGADOR
+ * ------------------ */
+void spawn_player_shot(Player* p)
+{
+   /* Teste de Sanidade... */
+   if (p == NULL) return;
+
+   if (p->selected_char == RYU || p->selected_char == KEN)
+      p->shot = create_shot(p->selected_char, p->x, p->y, 65, 35, p->pos_flag);
+}
+
+void show_shot(Player* p)
+{
+   /* Teste de Sanidade... */
+   if (p == NULL) return;
+
+   draw_shot(p->shot);
+}
+
+void move_shot(Player* p)
+{
+   /* Teste de Sanidade... */
+   if (p == NULL) return;
+
+   update_shot_movement(p->shot);
+}
+
+bool verify_damage_shot(Shot* shot, Player* p)
+{
+   /* Teste de Sanidade... */
+   if (p == NULL || shot == NULL) return false;
+
+   if (is_area_colliding(shot->x_hurt, shot->y_hurt, ceil(2.5*shot->w_hurt), ceil(2.5*shot->h_hurt),
+                             p->x_hit,     p->y_hit,     ceil(2.5*p->w_hit),     ceil(2.5*p->h_hit)))
+   {
+      p->hit_points -= 20;
+      return true;
+   }
+   return false;
+}
+
+void despawn_player_shot(Player* p)
+{
+   /* Teste de Sanidade... */
+   if (p == NULL) return;
+
+   destroy_shot(p->shot);
 }

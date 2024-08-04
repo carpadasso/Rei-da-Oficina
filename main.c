@@ -107,21 +107,18 @@ void restart_round(Player* p1, Player* p2, float* clk_timer)
    /* --------------------------
     * Reinicialização das Flags
     * -------------------------- */
-   p1->isAtkSup  = p1->isAtkInf  = false;
-   p1->isJumping = p1->isFalling = false;
-   p1->isCrouching = false;
-   p1->enableAtkSup = p1->enableAtkInf = p1->enableJump = 0;
+   p1->is_jumping = p1->is_falling = false;
+   p1->enable_atk_p = p1->enable_atk_k = p1->enable_jump = 0;
 
-   p2->isAtkSup  = p2->isAtkInf  = false;
-   p2->isJumping = p2->isFalling = false;
-   p2->isCrouching = false;
-   p2->enableAtkSup = p2->enableAtkInf = p2->enableJump = 0;
+   p2->is_jumping = p2->is_falling = false;
+   p2->enable_atk_p = p2->enable_atk_k = p2->enable_jump = 0;
 
-   /* ---------------------
-    * Reinicialização do HP
-    * --------------------- */
-   p1->hit_points = p2->hit_points = DEFAULT_HIT_POINTS;
-
+   /* --------------------------
+    * Reinicialização dos PONTOS
+    * -------------------------- */
+   p1->hit_points   = p2->hit_points   = DEFAULT_HIT_POINTS;
+   p1->power_points = p2->power_points = DEFAULT_POW_POINTS;
+   
    /* --------------------------
     * Reinicialização do Relógio
     * -------------------------- */
@@ -626,6 +623,7 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
             else if (ev.keyboard.keycode == ALLEGRO_KEY_D) joystick_right(p1->joystick);
             else if (ev.keyboard.keycode == ALLEGRO_KEY_Z) joystick_button_1(p1->joystick);
             else if (ev.keyboard.keycode == ALLEGRO_KEY_X) joystick_button_2(p1->joystick);
+            else if (ev.keyboard.keycode == ALLEGRO_KEY_C) joystick_button_3(p1->joystick);
 
             /* Teclas do Jogador 02:
             * CIMA, ESQUERDA, BAIXO, DIREITA -> Movimentação do Jogador 02
@@ -637,20 +635,23 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
             else if (ev.keyboard.keycode == ALLEGRO_KEY_RIGHT) joystick_right(p2->joystick);
             else if (ev.keyboard.keycode == ALLEGRO_KEY_K)     joystick_button_1(p2->joystick);
             else if (ev.keyboard.keycode == ALLEGRO_KEY_L)     joystick_button_2(p2->joystick);
+            else if (ev.keyboard.keycode == ALLEGRO_KEY_M)     joystick_button_3(p2->joystick);
 
             /* ------------------------
              * Reset de Flags de Enable
              * ------------------------ */
             if (ev.type == ALLEGRO_EVENT_KEY_UP){
                /* Flags de Enable do Jogador 01 */
-               if      (ev.keyboard.keycode == ALLEGRO_KEY_W) p1->enableJump   = 0;
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_Z) p1->enableAtkSup = 0;
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_X) p1->enableAtkInf = 0;
+               if      (ev.keyboard.keycode == ALLEGRO_KEY_W) p1->enable_jump   = 0;
+               else if (ev.keyboard.keycode == ALLEGRO_KEY_Z) p1->enable_atk_p  = 0;
+               else if (ev.keyboard.keycode == ALLEGRO_KEY_X) p1->enable_atk_k  = 0;
+               else if (ev.keyboard.keycode == ALLEGRO_KEY_C) p1->enable_atk_sp = 0;
 
                /* Flags de Enable do Jogador 02 */
-               if      (ev.keyboard.keycode == ALLEGRO_KEY_UP) p2->enableJump   = 0;
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_K)  p2->enableAtkSup = 0;
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_L)  p2->enableAtkInf = 0;
+               if      (ev.keyboard.keycode == ALLEGRO_KEY_UP) p2->enable_jump   = 0;
+               else if (ev.keyboard.keycode == ALLEGRO_KEY_K)  p2->enable_atk_p  = 0;
+               else if (ev.keyboard.keycode == ALLEGRO_KEY_L)  p2->enable_atk_k  = 0;
+               else if (ev.keyboard.keycode == ALLEGRO_KEY_M)  p2->enable_atk_sp = 0;
             }
          }
          
@@ -659,52 +660,89 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
           * como por exemplo os sprites dos jogadores, o cenário de fundo,
           * as barras de vida, etc. */
          else if (ev.type == ALLEGRO_EVENT_TIMER){
-            /* Exibição do Cenário de Fundo */
+            /* ----------------
+             * Cenário de Fundo
+             * ---------------- */
             draw_stage(stage, 0, 0, 800, 600);
 
-            /* Exibição dos Nomes dos Personagens */
+            /* ------------------
+             * Nome do Personagem
+             * ------------------ */
             if (p1->selected_char == RYU){
-               al_draw_text(fight_font_32, al_color_name("black"), 27.0,  82.0, 0, "RYU");
-               al_draw_text(fight_font_32, al_color_name("white"), 25.0,  80.0, 0, "RYU");
-               al_draw_text(fight_font_32, al_color_name("black"), 722.0, 82.0, 0, "KEN");
-               al_draw_text(fight_font_32, al_color_name("white"), 720.0, 80.0, 0, "KEN");
+               al_draw_text(fight_font_32, al_color_name("black"), 32.0,  22.0, 0, "RYU");
+               al_draw_text(fight_font_32, al_color_name("white"), 30.0,  20.0, 0, "RYU");
+               al_draw_text(fight_font_32, al_color_name("black"), 722.0, 22.0, 0, "KEN");
+               al_draw_text(fight_font_32, al_color_name("white"), 720.0, 20.0, 0, "KEN");
             }
             else {
-               al_draw_text(fight_font_32, al_color_name("black"), 722.0, 82.0, 0, "RYU");
-               al_draw_text(fight_font_32, al_color_name("white"), 720.0, 80.0, 0, "RYU");
-               al_draw_text(fight_font_32, al_color_name("black"), 27.0,  82.0, 0, "KEN");
-               al_draw_text(fight_font_32, al_color_name("white"), 25.0,  80.0, 0, "KEN");
+               al_draw_text(fight_font_32, al_color_name("black"), 722.0, 22.0, 0, "RYU");
+               al_draw_text(fight_font_32, al_color_name("white"), 720.0, 20.0, 0, "RYU");
+               al_draw_text(fight_font_32, al_color_name("black"), 32.0,  22.0, 0, "KEN");
+               al_draw_text(fight_font_32, al_color_name("white"), 30.0,  20.0, 0, "KEN");
             }
 
-            /* Exibição de informações importantes:
-             * Pontuação, Contador da Luta, Barras de Vida */
-            
-            /* Barra de Vida - Jogador 01*/
+            /* -------------
+             * Barra de Vida
+             * Jogador 01
+             * ------------- */
             al_draw_filled_rectangle(30, 50, 330, 70, al_color_name("black"));
             if (p1->hit_points > 0) 
                al_draw_filled_rectangle(30.0, 50.0, 30.0 + 300*(p1->hit_points / (1.0*DEFAULT_HIT_POINTS)), 70.0, al_color_name("yellow"));
             al_draw_rectangle(29.5, 49.5, 330.5, 70.5, al_color_name("white"), 3);
 
-            /* Barra de Vida - Jogador 02*/
+            /* -------------
+             * Barra de Vida
+             * Jogador 02
+             * ------------- */
             al_draw_filled_rectangle(470, 50, 770, 70, al_color_name("black"));
             if (p2->hit_points > 0)
                al_draw_filled_rectangle(470.0, 50.0, 470.0 + 300*(p2->hit_points / (1.0*DEFAULT_HIT_POINTS)), 70.0, al_color_name("yellow"));
             al_draw_rectangle(469.5, 49.5, 770.5, 70.5, al_color_name("white"), 3);
 
-            /* Pontuação - Jogador 01 */
-            if (rounds_p1 >= 1) al_draw_filled_rectangle(319.5, 79.5, 329.5, 99.5, al_color_name("orange"));
-            al_draw_rectangle(320.0, 80.0, 330.0, 100.0, al_color_name("white"), 3.0);
-            if (rounds_p1 >= 2) al_draw_filled_rectangle(299.5, 79.5, 309.5, 99.5, al_color_name("orange"));
-            al_draw_rectangle(300.0, 80.0, 310.0, 100.0, al_color_name("white"), 3.0);
+            /* ----------
+             * Pontuação
+             * Jogador 01
+             * ---------- */
+            if (rounds_p1 >= 1) al_draw_filled_rectangle(319.5, 79.5, 329.5, 89.5, al_color_name("orange"));
+            al_draw_rectangle(320.0, 80.0, 330.0, 90.0, al_color_name("white"), 3.0);
+            if (rounds_p1 >= 2) al_draw_filled_rectangle(299.5, 79.5, 309.5, 89.5, al_color_name("orange"));
+            al_draw_rectangle(300.0, 80.0, 310.0, 90.0, al_color_name("white"), 3.0);
 
-            /* Pontuação - Jogador 02 */
-            if (rounds_p2 >= 1) al_draw_filled_rectangle(469.5, 79.5, 479.5, 99.5, al_color_name("orange"));
-            al_draw_rectangle(470.0, 80.0, 480.0, 100.0, al_color_name("white"), 3.0);
-            if (rounds_p2 >= 2) al_draw_filled_rectangle(489.5, 79.5, 499.5, 99.5, al_color_name("orange"));
-            al_draw_rectangle(490.0, 80.0, 500.0, 100.0, al_color_name("white"), 3.0);
+            /* ----------
+             * Pontuação
+             * Jogador 02
+             * ---------- */
+            if (rounds_p2 >= 1) al_draw_filled_rectangle(469.5, 79.5, 479.5, 89.5, al_color_name("orange"));
+            al_draw_rectangle(470.0, 80.0, 480.0, 90.0, al_color_name("white"), 3.0);
+            if (rounds_p2 >= 2) al_draw_filled_rectangle(489.5, 79.5, 499.5, 89.5, al_color_name("orange"));
+            al_draw_rectangle(490.0, 80.0, 500.0, 90.0, al_color_name("white"), 3.0);
 
+            /* --------------
+             * Barra de Poder
+             * Jogador 01
+             * -------------- */
+            if (p1->power_points >= 1) al_draw_filled_rectangle(249.5, 79.5, 279.5, 89.5, al_color_name("mediumblue"));
+            al_draw_rectangle(250.0, 80.0, 280.0, 90.0, al_color_name("white"), 3.0);
+            if (p1->power_points >= 2) al_draw_filled_rectangle(209.5, 79.5, 239.5, 89.5, al_color_name("mediumblue"));
+            al_draw_rectangle(210.0, 80.0, 240.0, 90.0, al_color_name("white"), 3.0);
+            if (p1->power_points >= 3) al_draw_filled_rectangle(169.5, 79.5, 199.5, 89.5, al_color_name("mediumblue"));
+            al_draw_rectangle(170.0, 80.0, 200.0, 90.0, al_color_name("white"), 3.0);
+
+            /* --------------
+             * Barra de Poder
+             * Jogador 02
+             * -------------- */
+            if (p2->power_points >= 1) al_draw_filled_rectangle(519.5, 79.5, 549.5, 89.5, al_color_name("mediumblue"));
+            al_draw_rectangle(520.0, 80.0, 550.0, 90.0, al_color_name("white"), 3.0);
+            if (p2->power_points >= 2) al_draw_filled_rectangle(559.5, 79.5, 589.5, 89.5, al_color_name("mediumblue"));
+            al_draw_rectangle(560.0, 80.0, 590.0, 90.0, al_color_name("white"), 3.0);
+            if (p2->power_points >= 3) al_draw_filled_rectangle(599.5, 79.5, 629.5, 89.5, al_color_name("mediumblue"));
+            al_draw_rectangle(600.0, 80.0, 630.0, 90.0, al_color_name("white"), 3.0);
+
+            /* -----------------
+             * Contador de Tempo
+             * ----------------- */
             if (!finished_game){
-               /* Contador de Tempo... (tic, tac...) */
                al_draw_text(fight_font_32, al_color_name("black"),  402.0, 32.0, ALLEGRO_ALIGN_CENTER, "Tempo");
                al_draw_text(fight_font_32, al_color_name("yellow"), 400.0, 30.0, ALLEGRO_ALIGN_CENTER, "Tempo");
 
@@ -729,7 +767,26 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
                }
             }
 
-            /* Fim da Luta */
+            /* ------------------
+             * Contador de Rounds
+             * ------------------ */
+            if      (rounds_p1 + rounds_p2 == 0 && !finished_game){
+               al_draw_text(fight_font_32, al_color_name("black"),  402.0, 97.0, ALLEGRO_ALIGN_CENTER, "Round 01");
+               al_draw_text(fight_font_32, al_color_name("cyan"), 400.0, 95.0, ALLEGRO_ALIGN_CENTER, "Round 01");
+
+            }
+            else if (rounds_p1 + rounds_p2 == 1 && !finished_game){
+               al_draw_text(fight_font_32, al_color_name("black"),  402.0, 97.0, ALLEGRO_ALIGN_CENTER, "Round 02");
+               al_draw_text(fight_font_32, al_color_name("cyan"), 400.0, 95.0, ALLEGRO_ALIGN_CENTER, "Round 02");
+            }
+            else if (rounds_p1 + rounds_p2 == 2 && !finished_game){
+               al_draw_text(fight_font_32, al_color_name("black"),  402.0, 97.0, ALLEGRO_ALIGN_CENTER, "Round 03");
+               al_draw_text(fight_font_32, al_color_name("cyan"), 400.0, 95.0, ALLEGRO_ALIGN_CENTER, "Round 03");
+            }
+
+            /* -----------
+             * Fim da Luta
+             * ----------- */
             if (finished_game){
                al_draw_text(fight_font_48, al_color_name("black"), 402.0, 132.0, ALLEGRO_ALIGN_CENTER, "Resultado da Partida");
                al_draw_text(fight_font_48, al_color_name("white"), 400.0, 130.0, ALLEGRO_ALIGN_CENTER, "Resultado da Partida");
@@ -747,27 +804,40 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
             /* Exibição dos Sprites dos Jogadores */
 
             /* Hitbox: P1 */
-            //al_draw_rectangle(p1->x_hit, p1->y_hit, p1->x_hit+(p1->w_hit*2.5), 
-                              //p1->y_hit+(p1->h_hit*2.5), al_color_name("blue"), 1.0);
+            al_draw_rectangle(p1->x_hit, p1->y_hit, p1->x_hit+(p1->w_hit*2.5), 
+                              p1->y_hit+(p1->h_hit*2.5), al_color_name("blue"), 1.0);
 
             /* Hitbox: P2 */
-            //al_draw_rectangle(p2->x_hit-0.5, p2->y_hit-0.5, p2->x_hit+(p2->w_hit*2.5)+0.5, 
-                              //p2->y_hit+(p2->h_hit*2.5)+0.5, al_color_name("blue"), 1.0);
+            al_draw_rectangle(p2->x_hit-0.5, p2->y_hit-0.5, p2->x_hit+(p2->w_hit*2.5)+0.5, 
+                              p2->y_hit+(p2->h_hit*2.5)+0.5, al_color_name("blue"), 1.0);
 
             /* Hurtbox: P1 */
-            //al_draw_rectangle(p1->x_hurt-0.5, p1->y_hurt-0.5, p1->x_hurt+(p1->w_hurt*2.5)+0.5, 
-                              //p1->y_hurt+(p1->h_hurt*2.5)+0.5, al_color_name("red"), 1.0);
+            al_draw_rectangle(p1->x_hurt-0.5, p1->y_hurt-0.5, p1->x_hurt+(p1->w_hurt*2.5)+0.5, 
+                              p1->y_hurt+(p1->h_hurt*2.5)+0.5, al_color_name("red"), 1.0);
 
             /* Hurtbox: P2 */
-            //al_draw_rectangle(p2->x_hurt-0.5, p2->y_hurt-0.5, p2->x_hurt+(p2->w_hurt*2.5)+0.5, 
-                              //p2->y_hurt+(p2->h_hurt*2.5)+0.5, al_color_name("red"), 1.0);
+            al_draw_rectangle(p2->x_hurt-0.5, p2->y_hurt-0.5, p2->x_hurt+(p2->w_hurt*2.5)+0.5, 
+                              p2->y_hurt+(p2->h_hurt*2.5)+0.5, al_color_name("red"), 1.0);
             
             if (draw_sprite_player(p1, &frame_p1)) frame_p1 = 0;
             if (draw_sprite_player(p2, &frame_p2)) frame_p2 = 0;
 
+            if (p1->shot)
+               al_draw_rectangle(p1->shot->x_hurt-0.5, p1->shot->y_hurt-0.5, p1->shot->x_hurt+(p1->shot->w_hurt*2.5)+0.5, 
+                                 p1->shot->y_hurt+(p1->shot->h_hurt*2.5)+0.5, al_color_name("green"), 1.0);
+            if (p2->shot)
+               al_draw_rectangle(p2->shot->x_hurt-0.5, p2->shot->y_hurt-0.5, p2->shot->x_hurt+(p2->shot->w_hurt*2.5)+0.5, 
+                                 p2->shot->y_hurt+(p2->shot->h_hurt*2.5)+0.5, al_color_name("green"), 1.0);
+
+            show_shot(p1);
+            show_shot(p2);
+
             al_flip_display();
          }
          
+         /* -----------------------------
+          * Movimento do Cenário de Fundo
+          * ----------------------------- */
          /* Tenta mexer o cenário de fundo, mas o que faz de fato
           * é modificar a coordenada x do corte da imagem de fundo */
          if (  ((p1->move == WALK_POSITIVE && p1->pos_flag == 1)
@@ -791,14 +861,16 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
          * Tratamento de Flags de Enable
          * ----------------------------- */
          /* Flags do Jogador 01 */
-         if      (p1->joystick->up       && p1->enableJump < 2)   p1->enableJump += 1;
-         else if (p1->joystick->button_1 && p1->enableAtkSup < 2) p1->enableAtkSup += 1;
-         else if (p1->joystick->button_2 && p1->enableAtkInf < 2) p1->enableAtkInf += 1;
+         if      (p1->joystick->up       && p1->enable_jump < 2)   p1->enable_jump   += 1;
+         else if (p1->joystick->button_1 && p1->enable_atk_p < 2)  p1->enable_atk_p  += 1;
+         else if (p1->joystick->button_2 && p1->enable_atk_k < 2)  p1->enable_atk_k  += 1;
+         else if (p1->joystick->button_3 && p1->enable_atk_sp < 2) p1->enable_atk_sp += 1;
 
          /* Flags do Jogador 02 */
-         if      (p2->joystick->up       && p2->enableJump < 2)   p2->enableJump += 1;
-         else if (p2->joystick->button_1 && p2->enableAtkSup < 5) p2->enableAtkSup += 1;
-         else if (p2->joystick->button_2 && p2->enableAtkInf < 2) p2->enableAtkInf += 1;
+         if      (p2->joystick->up       && p2->enable_jump < 2)   p2->enable_jump   += 1;
+         else if (p2->joystick->button_1 && p2->enable_atk_p < 2)  p2->enable_atk_p  += 1;
+         else if (p2->joystick->button_2 && p2->enable_atk_k < 2)  p2->enable_atk_k  += 1;
+         else if (p2->joystick->button_3 && p2->enable_atk_sp < 2) p2->enable_atk_sp += 1;
 
          /* ----------------------
           * Movimentação e Ataques
@@ -809,8 +881,8 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
          update_player_movement(p2, p1);
          
          /* Modifica a Flag de Pulo */
-         if (p1->move == JUMP && !p1->isJumping) p1->isJumping = true;
-         if (p2->move == JUMP && !p2->isJumping) p2->isJumping = true;
+         if (p1->move == JUMP && !p1->is_jumping) p1->is_jumping = true;
+         if (p2->move == JUMP && !p2->is_jumping) p2->is_jumping = true;
 
          /* Modifica as coordenadas dos jogadores baseado no movimento,
           * ou seja, realiza de fato o movimento dos jogadores */
@@ -823,9 +895,24 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
          update_player_boxes(p2);
 
          /* Executa a matemática do ataque, baseado na colisão da hurtbox -> hitbox
-          * Se a flag de enable não estiver ativa, não contabiliza o ataque */
-         if (p1->enableAtkSup == 1 || p1->enableAtkInf == 1) execute_attack(p1, p2);
-         if (p2->enableAtkSup == 1 || p2->enableAtkInf == 1) execute_attack(p2, p1);
+          * Se a flag de enable não estiver igual a 1, não contabiliza o ataque */
+         if (p1->enable_atk_p == 1 || p1->enable_atk_k == 1) execute_attack(p1, p2);
+         if (p2->enable_atk_p == 1 || p2->enable_atk_k == 1) execute_attack(p2, p1);
+
+         /* Executa o ATAQUE ESPECIAL
+          * (nesse caso, Hadouken para ambos) */
+         if (p1->power_points > 0 && p1->shot == NULL && p1->enable_atk_sp == 1) 
+            { spawn_player_shot(p1); p1->power_points--; }
+         if (p2->power_points > 0 && p2->shot == NULL && p2->enable_atk_sp == 1)
+            { spawn_player_shot(p2); p2->power_points--; }
+
+         if (verify_damage_shot(p1->shot, p2) || (p1->shot && (p1->shot->x < 0 || p1->shot->x > DISPLAY_WIDTH - p1->shot->w)))
+            { despawn_player_shot(p1); p1->shot = NULL; }
+         if (verify_damage_shot(p2->shot, p1) || (p2->shot && (p2->shot->x < 0 || p2->shot->x > DISPLAY_WIDTH - p2->shot->w)))
+            { despawn_player_shot(p2); p2->shot = NULL; }
+         
+         move_shot(p1);
+         move_shot(p2);
       }
 
       /* Fim da Luta - Verifica se algum dos jogadores venceu 2 rounds

@@ -8,6 +8,9 @@
 
 /* Struct Sprite */
 struct Sprite_st {
+   /* Sprite Ataque ESPECIAL*/
+   ALLEGRO_BITMAP* attack_sp;
+   
    /* Sprite de SOCO*/
    ALLEGRO_BITMAP* attack_hp;
    ALLEGRO_BITMAP* attack_mp;
