@@ -176,8 +176,8 @@ void update_player_coordinates(Player* p1, Player* p2)
       else                   p1->x += STEP_BACK;
 
       /* Se ocorreu COLISÃO, desfazemos o movimento! */
-      if (is_area_colliding(p1->x_hit, p1->y_hit, ceil(p1->w_hit*2.5), ceil(p1->h_hit*2.5), 
-                            p2->x_hit, p2->y_hit, ceil(p2->w_hit*2.5), ceil(p2->h_hit*2.5))){
+      if (is_area_colliding(p1->x, p1->y, (p1->w - 20)*2.5, (p1->h - 20)*2.5, 
+                            p2->x, p2->y, (p2->w - 20)*2.5, (p2->h - 20)*2.5)){
          if (p1->pos_flag == 0) p1->x -= STEP_FRONT;
          else                   p1->x -= STEP_BACK;
       }
@@ -191,8 +191,8 @@ void update_player_coordinates(Player* p1, Player* p2)
       else                   p1->x -= STEP_FRONT;
 
       /* Se ocorreu COLISÃO... desfazemos o movimento! */
-      if (is_area_colliding(p1->x_hit, p1->y_hit, ceil(p1->w_hit*2.5), ceil(p1->h_hit*2.5), 
-                            p2->x_hit, p2->y_hit, ceil(p2->w_hit*2.5), ceil(p2->h_hit*2.5))){
+      if (is_area_colliding(p1->x, p1->y, (p1->w - 20)*2.5, (p1->h - 20)*2.5, 
+                            p2->x, p2->y, (p2->w - 20)*2.5, (p2->h - 20)*2.5)){
          if (p1->pos_flag == 0) p1->x += STEP_BACK;
          else                   p1->x += STEP_FRONT;
       }
@@ -210,10 +210,24 @@ void update_player_coordinates(Player* p1, Player* p2)
       if (p1->joystick->left){
          if (p1->pos_flag == 0) p1->x -= STEP_FRONT;
          else                   p1->x -= STEP_BACK;
+
+      if (is_area_colliding(p1->x, p1->y, (p1->w - 20)*2.5, (p1->h - 20)*2.5, 
+                            p2->x, p2->y, (p2->w - 20)*2.5, (p2->h - 20)*2.5))
+         {
+            if (p1->pos_flag == 0) p1->x += STEP_FRONT;
+            else                   p1->x += STEP_BACK;
+         }
       }
       if (p1->joystick->right){
          if (p1->pos_flag == 0) p1->x += STEP_BACK;
          else                   p1->x += STEP_FRONT;
+
+      if (is_area_colliding(p1->x, p1->y, (p1->w - 20)*2.5, (p1->h - 20)*2.5, 
+                            p2->x, p2->y, (p2->w - 20)*2.5, (p2->h - 20)*2.5))
+         {
+            if (p1->pos_flag == 0) p1->x -= STEP_BACK;
+            else                   p1->x -= STEP_FRONT;
+         }
       }
 
       /* Parte 02: Fazendo o jogador pular */
@@ -230,8 +244,22 @@ void update_player_coordinates(Player* p1, Player* p2)
             p1->is_falling = true;
          }
 
-         if (p1->is_falling) p1->y += GRAVITY;
-         else                p1->y -= GRAVITY;
+         if (p1->is_falling){
+            p1->y += GRAVITY;
+            if (is_area_colliding(p1->x, p1->y, (p1->w - 20)*2.5, (p1->h - 20)*2.5, 
+                                  p2->x, p2->y, (p2->w - 20)*2.5, (p2->h - 20)*2.5))
+            {
+               p1->y -= GRAVITY;
+            }
+         }
+         else {
+            p1->y -= GRAVITY;
+            if (is_area_colliding(p1->x, p1->y, (p1->w - 20)*2.5, (p1->h - 20)*2.5, 
+                                  p2->x, p2->y, (p2->w - 20)*2.5, (p2->h - 20)*2.5))
+            {
+               p1->y += GRAVITY;
+            }
+         }
       }
    }
 
@@ -451,14 +479,13 @@ void update_player_pos_flags(Player* p1, Player* p2)
    }
 }
 
-bool draw_sprite_player(Player* p, float* frame)
+void draw_sprite_player(Player* p)
 {
    unsigned short gap;
    int flag = p->pos_flag;
-   bool reset_frame = false;
 
    if   (p->pos_flag == 0) gap = 0;
-   else gap = 70;
+   else                    gap = 70;
 
    /* -------------------
     * Exibição de Sprites
@@ -469,25 +496,25 @@ bool draw_sprite_player(Player* p, float* frame)
        * Exibição de Movimentação
        * ------------------------ */
       if (p->move == JUMP && p->is_jumping){
-         if (*frame <= 6) *frame += 0.15;
-         else reset_frame = true;
+         if (p->sprites->frame <= 6) p->sprites->frame += 0.15;
+         else                        p->sprites->frame = 0;
          
-         if (*frame <= 3)
-            al_draw_scaled_bitmap(p->sprites->jump, 70*(int)(*frame), 0, 70, 115, p->x, p->y - 50*(int)(*frame), 70*2.5, 115*2.5, flag);
+         if (p->sprites->frame <= 3)
+            al_draw_scaled_bitmap(p->sprites->jump, 70*(int)(p->sprites->frame), 0, 70, 115, p->x, p->y - 50*(int)(p->sprites->frame), 70*2.5, 115*2.5, flag);
          else            
-            al_draw_scaled_bitmap(p->sprites->jump, 70*(int)(*frame), 0, 70, 115, p->x, p->y, 70*2.5, 115*2.5, flag);
+            al_draw_scaled_bitmap(p->sprites->jump, 70*(int)(p->sprites->frame), 0, 70, 115, p->x, p->y, 70*2.5, 115*2.5, flag);
       }
       else if ((p->move == WALK_NEGATIVE && p->pos_flag == 0) || (p->move == WALK_POSITIVE && p->pos_flag == 1)){
-         if (*frame <= 5) *frame += 0.15;
-         else *frame = 0;
+         if (p->sprites->frame <= 5) p->sprites->frame += 0.15;
+         else                        p->sprites->frame = 0;
 
-         al_draw_scaled_bitmap(p->sprites->walk_negative, 70*(int)(*frame), 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
+         al_draw_scaled_bitmap(p->sprites->walk_negative, 70*(int)(p->sprites->frame), 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
       }
       else if ((p->move == WALK_NEGATIVE && p->pos_flag == 1) || (p->move == WALK_POSITIVE && p->pos_flag == 0)){
-         if (*frame <= 5) *frame += 0.15;
-         else *frame = 0;
+         if (p->sprites->frame <= 5) p->sprites->frame += 0.15;
+         else                        p->sprites->frame = 0;
          
-         al_draw_scaled_bitmap(p->sprites->walk_positive, 70*(int)(*frame), 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
+         al_draw_scaled_bitmap(p->sprites->walk_positive, 70*(int)(p->sprites->frame), 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
       }
       else if (p->move == CROUCH){
          al_draw_scaled_bitmap(p->sprites->crouch, 140, 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
@@ -530,10 +557,10 @@ bool draw_sprite_player(Player* p, float* frame)
        * Exibição PARADO
        * --------------- */
       else {
-         if (*frame <= 4) *frame += 0.15;
-         else *frame = 0;
+         if (p->sprites->frame <= 4) p->sprites->frame += 0.15;
+         else                        p->sprites->frame = 0;
 
-         al_draw_scaled_bitmap(p->sprites->idle, 70*(int)(*frame), 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
+         al_draw_scaled_bitmap(p->sprites->idle, 70*(int)(p->sprites->frame), 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
       }
    }
    
@@ -546,25 +573,25 @@ bool draw_sprite_player(Player* p, float* frame)
        * Exibição de Movimentação
        * ------------------------ */
       if (p->move == JUMP && p->is_jumping){
-         if (*frame <= 7) *frame += 0.15;
-         else reset_frame = true;
+         if (p->sprites->frame <= 7) p->sprites->frame += 0.15;
+         else                        p->sprites->frame = 0.0;
 
-         if (*frame <= 3)
-            al_draw_scaled_bitmap(p->sprites->jump, 70*(int)(*frame), 0, 70, 105, p->x, p->y - 50*(int)(*frame), 70*2.5, 95*2.5, flag);
+         if (p->sprites->frame <= 3)
+            al_draw_scaled_bitmap(p->sprites->jump, 70*(int)(p->sprites->frame), 0, 70, 105, p->x, p->y - 50*(int)(p->sprites->frame), 70*2.5, 95*2.5, flag);
          else
-            al_draw_scaled_bitmap(p->sprites->jump, 70*(int)(*frame), 0, 70, 105, p->x, p->y, 70*2.5, 95*2.5, flag);
+            al_draw_scaled_bitmap(p->sprites->jump, 70*(int)(p->sprites->frame), 0, 70, 105, p->x, p->y, 70*2.5, 95*2.5, flag);
       }
       else if ((p->move == WALK_NEGATIVE && p->pos_flag == 0) || (p->move == WALK_POSITIVE && p->pos_flag == 1)){
-         if (*frame <= 5) *frame += 0.15;
-         else *frame = 0;
+         if (p->sprites->frame <= 5) p->sprites->frame += 0.15;
+         else                        p->sprites->frame = 0.0;
 
-         al_draw_scaled_bitmap(p->sprites->walk_negative, 70*(int)(*frame), 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
+         al_draw_scaled_bitmap(p->sprites->walk_negative, 70*(int)(p->sprites->frame), 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
       }
       else if ((p->move == WALK_NEGATIVE && p->pos_flag == 1) || (p->move == WALK_POSITIVE && p->pos_flag == 0)){
-         if (*frame <= 5) *frame += 0.15;
-         else *frame = 0;
+         if (p->sprites->frame <= 5) p->sprites->frame += 0.15;
+         else                        p->sprites->frame = 0.0;
 
-         al_draw_scaled_bitmap(p->sprites->walk_positive, 70*(int)(*frame), 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
+         al_draw_scaled_bitmap(p->sprites->walk_positive, 70*(int)(p->sprites->frame), 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
       }
       else if (p->move == CROUCH){
          al_draw_scaled_bitmap(p->sprites->crouch, 140, 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
@@ -607,14 +634,12 @@ bool draw_sprite_player(Player* p, float* frame)
        * Exibição PARADO
        * --------------- */
       else {
-         if (*frame <= 5) *frame += 0.15;
-         else *frame = 0;
+         if (p->sprites->frame <= 5) p->sprites->frame += 0.15;
+         else                        p->sprites->frame = 0.0;
 
-         al_draw_scaled_bitmap(p->sprites->idle, 70*(int)(*frame), 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
+         al_draw_scaled_bitmap(p->sprites->idle, 70*(int)(p->sprites->frame), 0, 70, 95, p->x, p->y, 70*2.5, 95*2.5, flag);
       }
    }
-
-   return reset_frame;
 }
 
 /* ------------------
@@ -653,7 +678,7 @@ bool verify_damage_shot(Shot* shot, Player* p)
    if (is_area_colliding(shot->x_hurt, shot->y_hurt, ceil(2.5*shot->w_hurt), ceil(2.5*shot->h_hurt),
                              p->x_hit,     p->y_hit,     ceil(2.5*p->w_hit),     ceil(2.5*p->h_hit)))
    {
-      p->hit_points -= 20;
+      p->hit_points -= 15;
       return true;
    }
    return false;

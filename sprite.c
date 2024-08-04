@@ -29,6 +29,9 @@ Sprite* create_sprites(Character fighter_selected)
       sprites->idle          = al_load_bitmap("./assets/characters/ryu/idle.png");
       sprites->walk_positive = al_load_bitmap("./assets/characters/ryu/walk_positive.png");
       sprites->walk_negative = al_load_bitmap("./assets/characters/ryu/walk_negative.png");
+
+      sprites->victory       = al_load_bitmap("./assets/characters/ryu/victory.png");
+      sprites->defeat        = al_load_bitmap("./assets/characters/ryu/defeat.png");
    }
 
    else if (fighter_selected == KEN){
@@ -48,17 +51,23 @@ Sprite* create_sprites(Character fighter_selected)
       sprites->idle          = al_load_bitmap("./assets/characters/ken/idle.png");
       sprites->walk_positive = al_load_bitmap("./assets/characters/ken/walk_positive.png");
       sprites->walk_negative = al_load_bitmap("./assets/characters/ken/walk_negative.png");
+
+      sprites->victory       = al_load_bitmap("./assets/characters/ken/victory.png");
+      sprites->defeat        = al_load_bitmap("./assets/characters/ken/defeat.png");
    }
 
    else {
       free(sprites); sprites = NULL;
    }
    
+   sprites->frame = 0.0;
+   
    return sprites;
 }
 
 void destroy_sprites(Sprite *sprites)
 {
+   /* Teste de Sanidade... */
    if (sprites == NULL) return;
 
    if (sprites->attack_hp) al_destroy_bitmap(sprites->attack_hp);
@@ -75,6 +84,9 @@ void destroy_sprites(Sprite *sprites)
    if (sprites->idle)          al_destroy_bitmap(sprites->idle);
    if (sprites->walk_positive) al_destroy_bitmap(sprites->walk_positive);
    if (sprites->walk_negative) al_destroy_bitmap(sprites->walk_negative);
+
+   if (sprites->victory) al_destroy_bitmap(sprites->victory);
+   if (sprites->defeat)  al_destroy_bitmap(sprites->defeat);
 
    free(sprites); sprites = NULL;
 }

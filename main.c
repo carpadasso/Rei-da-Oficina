@@ -23,8 +23,7 @@
 /* --------------------------------
  * Funções Secundárias / Auxiliares
  * -------------------------------- */
-// A utility function to reverse a string
-void reverse(char str[], int length)
+void inverte_string(char str[], int length)
 {
     int start = 0;
     int end = length - 1;
@@ -37,11 +36,10 @@ void reverse(char str[], int length)
     }
 }
 
-// Implementation of citoa()
 char* citoa(int num, char* str, int base)
 {
     int i = 0;
-    bool isNegative = false;
+    bool is_negative = false;
  
     /* Handle 0 explicitly, otherwise empty string is
      * printed for 0 */
@@ -55,7 +53,7 @@ char* citoa(int num, char* str, int base)
     // only with base 10. Otherwise numbers are
     // considered unsigned.
     if (num < 0 && base == 10) {
-        isNegative = true;
+        is_negative = true;
         num = -num;
     }
  
@@ -67,13 +65,13 @@ char* citoa(int num, char* str, int base)
     }
  
     // If number is negative, append '-'
-    if (isNegative)
+    if (is_negative)
         str[i++] = '-';
  
     str[i] = '\0'; // Append string terminator
  
     // Reverse the string
-    reverse(str, i);
+    inverte_string(str, i);
  
     return str;
 }
@@ -102,11 +100,13 @@ void restart_round(Player* p1, Player* p2, float* clk_timer)
    p2->w = p2->w_hit = p2->w_hurt = 70;
    p2->h = p2->h_hit = p2->h_hurt = 95;
 
-   p1->move = p2->move = IDLE;
+   p1->move = IDLE;
+   p2->move = IDLE;
 
    /* --------------------------
     * Reinicialização das Flags
     * -------------------------- */
+   p1->sprites->frame = p2->sprites->frame = 0.0;
    p1->is_jumping = p1->is_falling = false;
    p1->enable_atk_p = p1->enable_atk_k = p1->enable_jump = 0;
 
@@ -118,7 +118,7 @@ void restart_round(Player* p1, Player* p2, float* clk_timer)
     * -------------------------- */
    p1->hit_points   = p2->hit_points   = DEFAULT_HIT_POINTS;
    p1->power_points = p2->power_points = DEFAULT_POW_POINTS;
-   
+
    /* --------------------------
     * Reinicialização do Relógio
     * -------------------------- */
@@ -200,8 +200,7 @@ int execMainMenu(ALLEGRO_EVENT_QUEUE *event_queue)
    return 0;
 }
 
-int execSelectScreen(ALLEGRO_EVENT_QUEUE *event_queue, Character *char_p1, Character *char_p2,
-                        Stage** stage)
+int execSelectScreen(ALLEGRO_EVENT_QUEUE *event_queue, Character *char_p1, Character *char_p2, Stage** stage)
 {
    /* Variável de captura de evento
     * da fila de eventos */
@@ -212,11 +211,11 @@ int execSelectScreen(ALLEGRO_EVENT_QUEUE *event_queue, Character *char_p1, Chara
    Player* p1 = create_player(RYU,  90, 250, 70, 95);
    Player* p2 = create_player(KEN, 540, 250, 70, 95);
 
-   Stage* amazon_preview = create_stage(AMAZON);
+   Stage* amazon_preview       = create_stage(AMAZON);
    Stage* construction_preview = create_stage(CONSTRUCTION);
-   Stage* factory_preview = create_stage(FACTORY);
-   Stage* market_preview = create_stage(MARKET);
-   Stage* stage_preview = amazon_preview;
+   Stage* factory_preview      = create_stage(FACTORY);
+   Stage* market_preview       = create_stage(MARKET);
+   Stage* stage_preview        = amazon_preview;
 
    /* Fonte utilizada na Seleção de Personagem */
    ALLEGRO_FONT* bg_select_32 = al_load_ttf_font("./assets/font/Fatal Fighter.ttf", 32, 0);
@@ -224,8 +223,8 @@ int execSelectScreen(ALLEGRO_EVENT_QUEUE *event_queue, Character *char_p1, Chara
    ALLEGRO_FONT* font_select_32 = al_load_ttf_font("./assets/font/Break Brush.ttf", 32, 0);
 
    /* Cores utilizadas para o texto */
-   ALLEGRO_COLOR branco = al_map_rgb(255, 255, 255);
-   ALLEGRO_COLOR preto = al_map_rgb(0, 0, 0);
+   ALLEGRO_COLOR branco  = al_map_rgb(255, 255, 255);
+   ALLEGRO_COLOR preto   = al_map_rgb(0, 0, 0);
    ALLEGRO_COLOR amarelo = al_map_rgb(255, 234, 8);
    ALLEGRO_COLOR cor;
 
@@ -256,6 +255,8 @@ int execSelectScreen(ALLEGRO_EVENT_QUEUE *event_queue, Character *char_p1, Chara
    unsigned short sel_stage = 0;
 
    float frame = 0.0;
+
+   *stage = stage_preview;
 
    while (true)
    {
@@ -352,57 +353,57 @@ int execSelectScreen(ALLEGRO_EVENT_QUEUE *event_queue, Character *char_p1, Chara
          /* ------------------
           * Texto de Escolha
           * ------------------ */
-         al_draw_text(font_select_48, al_map_rgb(0, 0, 0),       402, 12, ALLEGRO_ALIGN_CENTER, "ESCOLHA SEU LUTADOR");
-         al_draw_text(font_select_48, al_map_rgb(255, 255, 255), 400, 10, ALLEGRO_ALIGN_CENTER, "ESCOLHA SEU LUTADOR");
+         al_draw_text(font_select_48, al_color_name("black"), 402.0, 12.0, ALLEGRO_ALIGN_CENTER, "ESCOLHA SEU LUTADOR");
+         al_draw_text(font_select_48, al_color_name("white"), 400.0, 10.0, ALLEGRO_ALIGN_CENTER, "ESCOLHA SEU LUTADOR");
 
-         al_draw_text(font_select_32, al_map_rgb(0, 0, 0),       92, 502, 0, "JOGADOR 01");
-         al_draw_text(font_select_32, al_map_rgb(255, 255, 255), 90, 500, 0, "JOGADOR 01");
+         al_draw_text(font_select_32, al_color_name("black"), 92.0, 502.0, 0, "JOGADOR 01");
+         al_draw_text(font_select_32, al_color_name("white"), 90.0, 500.0, 0, "JOGADOR 01");
 
-         al_draw_text(font_select_32, al_map_rgb(0, 0, 0),       582, 502, 0, "JOGADOR 02");
-         al_draw_text(font_select_32, al_map_rgb(255, 255, 255), 580, 500, 0, "JOGADOR 02");
+         al_draw_text(font_select_32, al_color_name("black"), 582.0, 502.0, 0, "JOGADOR 02");
+         al_draw_text(font_select_32, al_color_name("white"), 580.0, 500.0, 0, "JOGADOR 02");
 
-         al_draw_text(font_select_32, al_map_rgb(0, 0, 0),       402, 452, ALLEGRO_ALIGN_CENTER, "Modo de Jogo");
-         al_draw_text(font_select_32, al_map_rgb(255, 255, 255), 400, 450, ALLEGRO_ALIGN_CENTER, "Modo de Jogo");
+         al_draw_text(font_select_32, al_color_name("black"),      402.0, 352.0, ALLEGRO_ALIGN_CENTER, "Modo de Jogo");
+         al_draw_text(font_select_32, al_color_name("peachpuff"),  400.0, 350.0, ALLEGRO_ALIGN_CENTER, "Modo de Jogo");
 
-         al_draw_text(font_select_32, al_map_rgb(0, 0, 0),       402, 522, ALLEGRO_ALIGN_CENTER, "Estagio de Luta");
-         al_draw_text(font_select_32, al_map_rgb(255, 255, 255), 400, 520, ALLEGRO_ALIGN_CENTER, "Estagio de Luta");
+         al_draw_text(font_select_32, al_color_name("black"),     402.0, 422.0, ALLEGRO_ALIGN_CENTER, "Estagio de Luta");
+         al_draw_text(font_select_32, al_color_name("peachpuff"), 400.0, 420.0, ALLEGRO_ALIGN_CENTER, "Estagio de Luta");
       
          if (gamemode == 0){
             if (option == 0) cor = amarelo;
             else cor = branco;
-            al_draw_text(font_select_32, preto, 402, 482, ALLEGRO_ALIGN_CENTER, "< RYU vs. KEN >");
-            al_draw_text(font_select_32, cor,   400, 480, ALLEGRO_ALIGN_CENTER, "< RYU vs. KEN >");
+            al_draw_text(font_select_32, preto, 402.0, 382.0, ALLEGRO_ALIGN_CENTER, "< RYU vs. KEN >");
+            al_draw_text(font_select_32, cor,   400.0, 380.0, ALLEGRO_ALIGN_CENTER, "< RYU vs. KEN >");
          } 
          else if (gamemode == 1){
             if (option == 0) cor = amarelo;
             else cor = branco;
-            al_draw_text(font_select_32, preto, 402, 482, ALLEGRO_ALIGN_CENTER, "< KEN vs. RYU >");
-            al_draw_text(font_select_32, cor,   400, 480, ALLEGRO_ALIGN_CENTER, "< KEN vs. RYU >");
+            al_draw_text(font_select_32, preto, 402.0, 382.0, ALLEGRO_ALIGN_CENTER, "< KEN vs. RYU >");
+            al_draw_text(font_select_32, cor,   400.0, 380.0, ALLEGRO_ALIGN_CENTER, "< KEN vs. RYU >");
          }
 
          if      (sel_stage == 0){
             if (option == 1) cor = amarelo;
             else cor = branco;
-            al_draw_text(font_select_32, preto, 402, 552, ALLEGRO_ALIGN_CENTER, "< FLORESTA AMAZONICA >");
-            al_draw_text(font_select_32, cor,   400, 550, ALLEGRO_ALIGN_CENTER, "< FLORESTA AMAZONICA >");
+            al_draw_text(font_select_32, preto, 402.0, 452.0, ALLEGRO_ALIGN_CENTER, "< FLORESTA AMAZONICA >");
+            al_draw_text(font_select_32, cor,   400.0, 450.0, ALLEGRO_ALIGN_CENTER, "< FLORESTA AMAZONICA >");
          } 
          else if (sel_stage == 1){
             if (option == 1) cor = amarelo;
             else cor = branco;
-            al_draw_text(font_select_32, preto, 402, 552, ALLEGRO_ALIGN_CENTER, "< CANTEIRO DE OBRAS >");
-            al_draw_text(font_select_32, cor,   400, 550, ALLEGRO_ALIGN_CENTER, "< CANTEIRO DE OBRAS >");
+            al_draw_text(font_select_32, preto, 402.0, 452.0, ALLEGRO_ALIGN_CENTER, "< CANTEIRO DE OBRAS >");
+            al_draw_text(font_select_32, cor,   400.0, 450.0, ALLEGRO_ALIGN_CENTER, "< CANTEIRO DE OBRAS >");
          }
          else if (sel_stage == 2){
             if (option == 1) cor = amarelo;
             else cor = branco;
-            al_draw_text(font_select_32, preto, 402, 552, ALLEGRO_ALIGN_CENTER, "< USINA EM CHAMAS >");
-            al_draw_text(font_select_32, cor,   400, 550, ALLEGRO_ALIGN_CENTER, "< USINA EM CHAMAS >");
+            al_draw_text(font_select_32, preto, 402.0, 452.0, ALLEGRO_ALIGN_CENTER, "< USINA EM CHAMAS >");
+            al_draw_text(font_select_32, cor,   400.0, 450.0, ALLEGRO_ALIGN_CENTER, "< USINA EM CHAMAS >");
          }
          else if (sel_stage == 3){
             if (option == 1) cor = amarelo;
             else cor = branco;
-            al_draw_text(font_select_32, preto, 402, 552, ALLEGRO_ALIGN_CENTER, "< MERCADINHO >");
-            al_draw_text(font_select_32, cor,   400, 550, ALLEGRO_ALIGN_CENTER, "< MERCADINHO >");
+            al_draw_text(font_select_32, preto, 402.0, 452.0, ALLEGRO_ALIGN_CENTER, "< MERCADINHO >");
+            al_draw_text(font_select_32, cor,   400.0, 450.0, ALLEGRO_ALIGN_CENTER, "< MERCADINHO >");
          }
 
          /* -------------------------------------------
@@ -412,11 +413,11 @@ int execSelectScreen(ALLEGRO_EVENT_QUEUE *event_queue, Character *char_p1, Chara
          if (frame >= 5) frame = 0;
 
          if (gamemode == 0){
-            al_draw_scaled_bitmap(p1->sprites->idle, 70*floor(frame), 0, 70, 95, p1->x, p1->y, 70*2.5, 95*2.5, 0);
-            al_draw_scaled_bitmap(p2->sprites->idle, 70*floor(frame), 0, 70, 95, p2->x, p2->y, 70*2.5, 95*2.5, 1);
+            al_draw_scaled_bitmap(p1->sprites->idle, 70*floor(frame), 0.0, 70.0, 95.0, p1->x, p1->y, 70*2.5, 95*2.5, 0);
+            al_draw_scaled_bitmap(p2->sprites->idle, 70*floor(frame), 0.0, 70.0, 95.0, p2->x, p2->y, 70*2.5, 95*2.5, 1);
          } else {
-            al_draw_scaled_bitmap(p2->sprites->idle, 70*floor(frame), 0, 70, 95, p1->x, p1->y, 70*2.5, 95*2.5, 0);
-            al_draw_scaled_bitmap(p1->sprites->idle, 70*floor(frame), 0, 70, 95, p2->x, p2->y, 70*2.5, 95*2.5, 1);
+            al_draw_scaled_bitmap(p2->sprites->idle, 70*floor(frame), 0.0, 70.0, 95.0, p1->x, p1->y, 70*2.5, 95*2.5, 0);
+            al_draw_scaled_bitmap(p1->sprites->idle, 70*floor(frame), 0.0, 70.0, 95.0, p2->x, p2->y, 70*2.5, 95*2.5, 1);
          }
 
          al_flip_display();
@@ -441,8 +442,7 @@ int execSelectScreen(ALLEGRO_EVENT_QUEUE *event_queue, Character *char_p1, Chara
    return close_game;
 }
 
-int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p2,
-                  Stage* stage)
+int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p2, Stage* stage)
 {
    /* Variável de captura de evento
     * da fila de eventos */
@@ -451,6 +451,7 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
    /* Criação dos Jogadores */
    Player* p1 = create_player(char_p1, 20, Y_MAX, 70, 95);
    Player* p2 = create_player(char_p2, DISPLAY_WIDTH - 200, Y_MAX, 70, 95);
+   ALLEGRO_BITMAP* shadow = al_load_bitmap("./assets/characters/shadow.png");
 
    /* Fontes usadas na HUD da luta */
    ALLEGRO_FONT* fight_font_60 = al_load_ttf_font("./assets/font/Break Brush.ttf", 60, 0);
@@ -458,9 +459,7 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
    ALLEGRO_FONT* fight_font_32 = al_load_ttf_font("./assets/font/Break Brush.ttf", 32, 0);
 
    /* Contadores de Controle:
-    * frame_p1, frame_p2 - Controla o frame a ser exibido do sprite 
     * rounds_p1, rounds_p2 - Controla quantos rounds cada jogador venceu */
-   float frame_p1, frame_p2;
    unsigned short rounds_p1 = 0, rounds_p2 = 0;
 
    /* Flags de Controle:
@@ -480,6 +479,9 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
    unsigned short pause_opt = 0;
    ALLEGRO_BITMAP* transparency = al_load_bitmap("./assets/screen.png");
 
+   /* Variáveis de uso do Menu de Fim de Jogo */
+   unsigned short end_opt = 0;
+
    /* ---------------
     * Loop da Partida
     * --------------- */
@@ -487,10 +489,8 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
       /* Reinício do Round - Precisamos resetar as variáveis
        * de controle de frames, a coordenada de corte do cenário e
        * os elementos da luta: jogadores e contador */
-      frame_p1 = 0;
-      frame_p2 = 0;
       stage->stage_x = al_get_bitmap_width(stage->stage_sprite) / 2;
-      restart_round(p1, p2, &clk_timer);
+      if (!finished_game) restart_round(p1, p2, &clk_timer);
 
       /* Execução do Round - Aqui acontece o tratamento de inputs 
        * dos controles, impressões na tela e cálculos de ataque,
@@ -504,16 +504,14 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
          if (p1->hit_points <= 0) { rounds_p2++; break; }
          if (p2->hit_points <= 0) { rounds_p1++; break; }
 
+         /* Fim da Luta - Verifica se algum dos jogadores venceu 2 rounds
+         * ou também se o jogo quer ser fechado, tornando a flag de fim de jogo verdadeira */
+         if (rounds_p1 == 2 || rounds_p2 == 2) finished_game = true;
+         else finished_game = false;
+
          /* Atualiza a
           * Flag de Posição */
          update_player_pos_flags(p1, p2);
-
-         /* --------------------
-          * Encerramento da Luta
-          * -------------------- */
-         if (finished_game){
-            p1->move = p2->move = IDLE;
-         }
 
          /* ---------------------
           * Tratamento de Eventos
@@ -525,12 +523,59 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
             break;
          }
          
-         /* Evento 02: Menu de Pause 
+         /* Evento 02: Fim de Jogo
+          * Gerencia as opções do Menu de Fim de Jogo. */
+         else if (finished_game && ev.type == ALLEGRO_EVENT_KEY_DOWN){
+            if (ev.keyboard.keycode == ALLEGRO_KEY_DOWN || ev.keyboard.keycode == ALLEGRO_KEY_S){
+               if      (end_opt == 0) end_opt = 1;
+               else if (end_opt == 1) end_opt = 0;
+            }
+            else if (ev.keyboard.keycode == ALLEGRO_KEY_UP || ev.keyboard.keycode == ALLEGRO_KEY_W){
+               if      (end_opt == 0) end_opt = 1;
+               else if (end_opt == 1) end_opt = 0;
+            }
+            else if (ev.keyboard.keycode == ALLEGRO_KEY_ENTER){
+               if (end_opt == 0){
+                  rounds_p1 = rounds_p2 = 0;
+                  finished_game = false;
+
+                  /* --------------------------
+                  * Reinicialização do JOYSTICK
+                  * -------------------------- */
+                  p1->joystick->left = p1->joystick->right = false;
+                  p1->joystick->up   = p1->joystick->down  = false;
+                  p1->joystick->button_1 = p1->joystick->button_2 = p1->joystick->button_3 = false;
+
+                  p2->joystick->left = p2->joystick->right = false;
+                  p2->joystick->up   = p2->joystick->down  = false;
+                  p2->joystick->button_1 = p2->joystick->button_2 = p2->joystick->button_3 = false;
+
+                  restart_round(p1, p2, &clk_timer);
+               }
+               else if (end_opt == 1){
+                  destroy_player(p1);
+                  destroy_player(p2);
+                  
+                  destroy_stage(stage);
+
+                  al_destroy_font(fight_font_60);
+                  al_destroy_font(fight_font_48);
+                  al_destroy_font(fight_font_32);
+
+                  al_destroy_bitmap(shadow);
+                  al_destroy_bitmap(transparency);
+
+                  return 0;
+               }
+            }
+         }
+         
+         /* Evento 03: Menu de Pause 
           * Realiza o congelamento da luta, dando opção aos jogadores de
           * Retomar a Jogatina após uma pausa, Reiniciar a Luta caso algum dos
           * jogadores ficou bravo com um dos rounds, ou Voltar ao Menu Inicial
           * caso queiram trocar de personagens */
-         else if (ev.type == ALLEGRO_EVENT_KEY_DOWN && ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE && !finished_game){
+         else if (!finished_game && ev.type == ALLEGRO_EVENT_KEY_DOWN && ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE){
             do 
             {
                al_wait_for_event(ev_queue, &ev);
@@ -559,7 +604,6 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
                      /* Reiniciar a Luta */
                      if (pause_opt == 1){
                         rounds_p1 = rounds_p2 = 0;
-                        frame_p1  = frame_p2  = 0;
                         stage->stage_x = al_get_bitmap_width(stage->stage_sprite) / 2;
                         restart_round(p1, p2, &clk_timer);
                         break;
@@ -569,10 +613,14 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
                      if (pause_opt == 2){
                         destroy_player(p1);
                         destroy_player(p2);
+
                         destroy_stage(stage);
+
                         al_destroy_font(fight_font_60);
                         al_destroy_font(fight_font_48);
                         al_destroy_font(fight_font_32);
+
+                        al_destroy_bitmap(shadow);
                         al_destroy_bitmap(transparency);
 
                         return 0;
@@ -605,11 +653,11 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
             if (close_game) break;
          }
          
-         /* Evento 03: Inputs do Controle 
+         /* Evento 04: Inputs do Controle 
           * Trata sobre o pressionar-soltar de uma tecla.
           * Essa parte faz com que se registre APENAS se uma tecla está ativa
           * ou não, ou seja, não contabiliza quantos segundos uma tecla está pressionada!! */
-         else if ((ev.type == ALLEGRO_EVENT_KEY_DOWN || ev.type == ALLEGRO_EVENT_KEY_UP) && !finished_game){
+         else if (!finished_game && (ev.type == ALLEGRO_EVENT_KEY_DOWN || ev.type == ALLEGRO_EVENT_KEY_UP)){
             /* ------------------
              * Botões do Controle
              * ------------------ */
@@ -655,7 +703,7 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
             }
          }
          
-         /* Evento 04: Atualização do Temporizador
+         /* Evento 05: Atualização do Temporizador
           * Aqui trata-se, de maior parte, sobre imprimir coisas na tela,
           * como por exemplo os sprites dos jogadores, o cenário de fundo,
           * as barras de vida, etc. */
@@ -687,8 +735,8 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
              * ------------- */
             al_draw_filled_rectangle(30, 50, 330, 70, al_color_name("black"));
             if (p1->hit_points > 0) 
-               al_draw_filled_rectangle(30.0, 50.0, 30.0 + 300*(p1->hit_points / (1.0*DEFAULT_HIT_POINTS)), 70.0, al_color_name("yellow"));
-            al_draw_rectangle(29.5, 49.5, 330.5, 70.5, al_color_name("white"), 3);
+               al_draw_filled_rectangle(30.0, 50.0, 30.0 + 300*(p1->hit_points / (1.0*DEFAULT_HIT_POINTS)), 70.0, al_color_name("gold"));
+            al_draw_rectangle(29.5, 49.5, 330.5, 70.5, al_color_name("white"), 2.0);
 
             /* -------------
              * Barra de Vida
@@ -696,48 +744,48 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
              * ------------- */
             al_draw_filled_rectangle(470, 50, 770, 70, al_color_name("black"));
             if (p2->hit_points > 0)
-               al_draw_filled_rectangle(470.0, 50.0, 470.0 + 300*(p2->hit_points / (1.0*DEFAULT_HIT_POINTS)), 70.0, al_color_name("yellow"));
-            al_draw_rectangle(469.5, 49.5, 770.5, 70.5, al_color_name("white"), 3);
+               al_draw_filled_rectangle(470.0, 50.0, 470.0 + 300*(p2->hit_points / (1.0*DEFAULT_HIT_POINTS)), 70.0, al_color_name("gold"));
+            al_draw_rectangle(469.5, 49.5, 770.5, 70.5, al_color_name("white"), 2.0);
 
             /* ----------
              * Pontuação
              * Jogador 01
              * ---------- */
-            if (rounds_p1 >= 1) al_draw_filled_rectangle(319.5, 79.5, 329.5, 89.5, al_color_name("orange"));
-            al_draw_rectangle(320.0, 80.0, 330.0, 90.0, al_color_name("white"), 3.0);
-            if (rounds_p1 >= 2) al_draw_filled_rectangle(299.5, 79.5, 309.5, 89.5, al_color_name("orange"));
-            al_draw_rectangle(300.0, 80.0, 310.0, 90.0, al_color_name("white"), 3.0);
+            if (rounds_p1 >= 1) al_draw_filled_rectangle(319.5, 79.5, 329.5, 89.5, al_color_name("yellowgreen"));
+            al_draw_rectangle(320.0, 80.0, 330.0, 90.0, al_color_name("white"), 2.0);
+            if (rounds_p1 >= 2) al_draw_filled_rectangle(299.5, 79.5, 309.5, 89.5, al_color_name("yellowgreen"));
+            al_draw_rectangle(300.0, 80.0, 310.0, 90.0, al_color_name("white"), 2.0);
 
             /* ----------
              * Pontuação
              * Jogador 02
              * ---------- */
-            if (rounds_p2 >= 1) al_draw_filled_rectangle(469.5, 79.5, 479.5, 89.5, al_color_name("orange"));
-            al_draw_rectangle(470.0, 80.0, 480.0, 90.0, al_color_name("white"), 3.0);
-            if (rounds_p2 >= 2) al_draw_filled_rectangle(489.5, 79.5, 499.5, 89.5, al_color_name("orange"));
-            al_draw_rectangle(490.0, 80.0, 500.0, 90.0, al_color_name("white"), 3.0);
+            if (rounds_p2 >= 1) al_draw_filled_rectangle(469.5, 79.5, 479.5, 89.5, al_color_name("yellowgreen"));
+            al_draw_rectangle(470.0, 80.0, 480.0, 90.0, al_color_name("white"), 2.0);
+            if (rounds_p2 >= 2) al_draw_filled_rectangle(489.5, 79.5, 499.5, 89.5, al_color_name("yellowgreen"));
+            al_draw_rectangle(490.0, 80.0, 500.0, 90.0, al_color_name("white"), 2.0);
 
             /* --------------
              * Barra de Poder
              * Jogador 01
              * -------------- */
-            if (p1->power_points >= 1) al_draw_filled_rectangle(249.5, 79.5, 279.5, 89.5, al_color_name("mediumblue"));
-            al_draw_rectangle(250.0, 80.0, 280.0, 90.0, al_color_name("white"), 3.0);
-            if (p1->power_points >= 2) al_draw_filled_rectangle(209.5, 79.5, 239.5, 89.5, al_color_name("mediumblue"));
-            al_draw_rectangle(210.0, 80.0, 240.0, 90.0, al_color_name("white"), 3.0);
-            if (p1->power_points >= 3) al_draw_filled_rectangle(169.5, 79.5, 199.5, 89.5, al_color_name("mediumblue"));
-            al_draw_rectangle(170.0, 80.0, 200.0, 90.0, al_color_name("white"), 3.0);
+            if (p1->power_points >= 1) al_draw_filled_rectangle(249.5, 79.5, 279.5, 89.5, al_color_name("darkturquoise"));
+            al_draw_rectangle(250.0, 80.0, 280.0, 90.0, al_color_name("white"), 2.0);
+            if (p1->power_points >= 2) al_draw_filled_rectangle(209.5, 79.5, 239.5, 89.5, al_color_name("darkturquoise"));
+            al_draw_rectangle(210.0, 80.0, 240.0, 90.0, al_color_name("white"), 2.0);
+            if (p1->power_points >= 3) al_draw_filled_rectangle(169.5, 79.5, 199.5, 89.5, al_color_name("darkturquoise"));
+            al_draw_rectangle(170.0, 80.0, 200.0, 90.0, al_color_name("white"), 2.0);
 
             /* --------------
              * Barra de Poder
              * Jogador 02
              * -------------- */
-            if (p2->power_points >= 1) al_draw_filled_rectangle(519.5, 79.5, 549.5, 89.5, al_color_name("mediumblue"));
-            al_draw_rectangle(520.0, 80.0, 550.0, 90.0, al_color_name("white"), 3.0);
-            if (p2->power_points >= 2) al_draw_filled_rectangle(559.5, 79.5, 589.5, 89.5, al_color_name("mediumblue"));
-            al_draw_rectangle(560.0, 80.0, 590.0, 90.0, al_color_name("white"), 3.0);
-            if (p2->power_points >= 3) al_draw_filled_rectangle(599.5, 79.5, 629.5, 89.5, al_color_name("mediumblue"));
-            al_draw_rectangle(600.0, 80.0, 630.0, 90.0, al_color_name("white"), 3.0);
+            if (p2->power_points >= 1) al_draw_filled_rectangle(519.5, 79.5, 549.5, 89.5, al_color_name("darkturquoise"));
+            al_draw_rectangle(520.0, 80.0, 550.0, 90.0, al_color_name("white"), 2.0);
+            if (p2->power_points >= 2) al_draw_filled_rectangle(559.5, 79.5, 589.5, 89.5, al_color_name("darkturquoise"));
+            al_draw_rectangle(560.0, 80.0, 590.0, 90.0, al_color_name("white"), 2.0);
+            if (p2->power_points >= 3) al_draw_filled_rectangle(599.5, 79.5, 629.5, 89.5, al_color_name("darkturquoise"));
+            al_draw_rectangle(600.0, 80.0, 630.0, 90.0, al_color_name("white"), 2.0);
 
             /* -----------------
              * Contador de Tempo
@@ -772,16 +820,16 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
              * ------------------ */
             if      (rounds_p1 + rounds_p2 == 0 && !finished_game){
                al_draw_text(fight_font_32, al_color_name("black"),  402.0, 97.0, ALLEGRO_ALIGN_CENTER, "Round 01");
-               al_draw_text(fight_font_32, al_color_name("cyan"), 400.0, 95.0, ALLEGRO_ALIGN_CENTER, "Round 01");
+               al_draw_text(fight_font_32,  al_color_name("palegoldenrod"),  400.0, 95.0, ALLEGRO_ALIGN_CENTER, "Round 01");
 
             }
             else if (rounds_p1 + rounds_p2 == 1 && !finished_game){
                al_draw_text(fight_font_32, al_color_name("black"),  402.0, 97.0, ALLEGRO_ALIGN_CENTER, "Round 02");
-               al_draw_text(fight_font_32, al_color_name("cyan"), 400.0, 95.0, ALLEGRO_ALIGN_CENTER, "Round 02");
+               al_draw_text(fight_font_32,  al_color_name("palegoldenrod"),  400.0, 95.0, ALLEGRO_ALIGN_CENTER, "Round 02");
             }
             else if (rounds_p1 + rounds_p2 == 2 && !finished_game){
                al_draw_text(fight_font_32, al_color_name("black"),  402.0, 97.0, ALLEGRO_ALIGN_CENTER, "Round 03");
-               al_draw_text(fight_font_32, al_color_name("cyan"), 400.0, 95.0, ALLEGRO_ALIGN_CENTER, "Round 03");
+               al_draw_text(fight_font_32,  al_color_name("palegoldenrod"),  400.0, 95.0, ALLEGRO_ALIGN_CENTER, "Round 03");
             }
 
             /* -----------
@@ -789,7 +837,7 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
              * ----------- */
             if (finished_game){
                al_draw_text(fight_font_48, al_color_name("black"), 402.0, 132.0, ALLEGRO_ALIGN_CENTER, "Resultado da Partida");
-               al_draw_text(fight_font_48, al_color_name("white"), 400.0, 130.0, ALLEGRO_ALIGN_CENTER, "Resultado da Partida");
+               al_draw_text(fight_font_48, al_color_name("coral"), 400.0, 130.0, ALLEGRO_ALIGN_CENTER, "Resultado da Partida");
 
                if (rounds_p1 == 2){
                   al_draw_text(fight_font_60, al_color_name("black"), 402.0, 182.0, ALLEGRO_ALIGN_CENTER, "JOGADOR 01");
@@ -799,9 +847,22 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
                   al_draw_text(fight_font_60, al_color_name("black"), 402.0, 182.0, ALLEGRO_ALIGN_CENTER, "JOGADOR 02");
                   al_draw_text(fight_font_60, al_color_name("white"), 400.0, 180.0, ALLEGRO_ALIGN_CENTER, "JOGADOR 02");
                }
+
+               al_draw_text(fight_font_48, al_color_name("black"), 402.0, 302.0, ALLEGRO_ALIGN_CENTER, "Fim de Jogo");
+               al_draw_text(fight_font_48, al_color_name("coral"), 400.0, 300.0, ALLEGRO_ALIGN_CENTER, "Fim de Jogo");
+
+               al_draw_text(fight_font_32, al_color_name("black"), 402.0, 352.0, ALLEGRO_ALIGN_CENTER, "Revanche");
+               if (end_opt == 0) al_draw_text(fight_font_32, al_color_name("yellow"), 400.0, 350.0, ALLEGRO_ALIGN_CENTER, "Revanche");
+               else              al_draw_text(fight_font_32, al_color_name("white"),  400.0, 350.0, ALLEGRO_ALIGN_CENTER, "Revanche");
+
+               al_draw_text(fight_font_32, al_color_name("black"), 402.0, 392.0, ALLEGRO_ALIGN_CENTER, "Voltar ao Menu Inicial");
+               if (end_opt == 1) al_draw_text(fight_font_32, al_color_name("yellow"), 400.0, 390.0, ALLEGRO_ALIGN_CENTER, "Voltar ao Menu Inicial");
+               else              al_draw_text(fight_font_32, al_color_name("white"),  400.0, 390.0, ALLEGRO_ALIGN_CENTER, "Voltar ao Menu Inicial");
             }
 
-            /* Exibição dos Sprites dos Jogadores */
+            /* ---------------------
+             * Sprites dos Jogadores
+             * --------------------- */
 
             /* Hitbox: P1 */
             al_draw_rectangle(p1->x_hit, p1->y_hit, p1->x_hit+(p1->w_hit*2.5), 
@@ -819,9 +880,45 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
             al_draw_rectangle(p2->x_hurt-0.5, p2->y_hurt-0.5, p2->x_hurt+(p2->w_hurt*2.5)+0.5, 
                               p2->y_hurt+(p2->h_hurt*2.5)+0.5, al_color_name("red"), 1.0);
             
-            if (draw_sprite_player(p1, &frame_p1)) frame_p1 = 0;
-            if (draw_sprite_player(p2, &frame_p2)) frame_p2 = 0;
+            /* Sombras */
+            al_draw_scaled_bitmap(shadow, 0, 0, 82, 14, p1->x - 20, Y_MAX + 210, 2.5*82, 2.5*14, p1->pos_flag);
+            al_draw_scaled_bitmap(shadow, 0, 0, 82, 14, p2->x - 20, Y_MAX + 210, 2.5*82, 2.5*14, p2->pos_flag);
 
+            /* -------------------
+             * Exibição de Sprites
+             * ------------------- */
+            if (!finished_game){
+               draw_sprite_player(p1);
+               draw_sprite_player(p2);
+            }
+            else {
+               /* Jogador 01 VENCEU */
+               if (rounds_p1 == 2){
+                  if (p1->selected_char == RYU){
+                     al_draw_scaled_bitmap(p1->sprites->victory, 0, 0,  70, 125, p1->x,  p1->y - 75,  2.5*70, 2.5*125, p1->pos_flag);
+                     al_draw_scaled_bitmap(p2->sprites->defeat,  0, 0, 140,  95, p2->x - 175, p2->y, 2.5*140,  2.5*95, p2->pos_flag);
+                  }
+                  else {
+                     al_draw_scaled_bitmap(p1->sprites->victory, 0, 0,  70,  95, p1->x,       p1->y,  2.5*70, 2.5*95, p1->pos_flag);
+                     al_draw_scaled_bitmap(p2->sprites->defeat,  0, 0, 140,  95, p2->x - 175, p2->y, 2.5*140,  2.5*95, p2->pos_flag);
+                  }
+               }
+               /* Jogador 02 VENCEU */
+               else {
+                  if (p1->selected_char == RYU){
+                     al_draw_scaled_bitmap(p2->sprites->victory, 0, 0,  70,  95, p2->x, p2->y,  2.5*70,  2.5*95, p2->pos_flag);
+                     al_draw_scaled_bitmap(p1->sprites->defeat,  0, 0, 140,  95, p1->x, p1->y, 2.5*140,  2.5*95, p1->pos_flag);
+                  }
+                  else {
+                     al_draw_scaled_bitmap(p2->sprites->victory, 0, 0,  70,  125, p2->x, p2->y - 75,  2.5*70,  2.5*125, p2->pos_flag);
+                     al_draw_scaled_bitmap(p1->sprites->defeat,  0, 0, 140,  95, p1->x, p1->y, 2.5*140,  2.5*95, p1->pos_flag);
+                  }
+               }
+            }
+
+            /* --------------------
+             * Exibição de DISPAROS
+             * -------------------- */
             if (p1->shot)
                al_draw_rectangle(p1->shot->x_hurt-0.5, p1->shot->y_hurt-0.5, p1->shot->x_hurt+(p1->shot->w_hurt*2.5)+0.5, 
                                  p1->shot->y_hurt+(p1->shot->h_hurt*2.5)+0.5, al_color_name("green"), 1.0);
@@ -840,21 +937,41 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
           * ----------------------------- */
          /* Tenta mexer o cenário de fundo, mas o que faz de fato
           * é modificar a coordenada x do corte da imagem de fundo */
-         if (  ((p1->move == WALK_POSITIVE && p1->pos_flag == 1)
-               || (p2->move == WALK_POSITIVE && p2->pos_flag == 1))
-               && ((p1->x - p2->x <= DISPLAY_WIDTH - 70*2.5) || (p2->x - p1->x <= DISPLAY_WIDTH - 70*2.5))
-               && ((p1->x > X_MAX) || (p2->x > X_MAX)) ){
+         if (p1->move == WALK_POSITIVE && p1->pos_flag == 1 && p2->x > 10){
+            if (p1->x - p2->x < DISPLAY_WIDTH - 2.5*p1->w){
                stage->stage_x += 2;
                if (stage->stage_x > al_get_bitmap_width(stage->stage_sprite) - 300)
                   stage->stage_x -= 2;
+               else
+                  p2->x -= 5;
+            }
          }
-         if (  ((p1->move == WALK_NEGATIVE && p1->pos_flag == 0)
-               || (p2->move == WALK_NEGATIVE && p2->pos_flag == 0))
-               && ((p1->x - p2->x <= DISPLAY_WIDTH - 70*2.5) || (p2->x - p1->x <= DISPLAY_WIDTH - 70*2.5))
-               && ((p1->x < 20) || (p2->x < 20)) ){
+         else if (p2->move == WALK_POSITIVE && p2->pos_flag == 1 && p1->x > 10){
+            if (p2->x - p1->x < DISPLAY_WIDTH - 2.5*p2->w){
+               stage->stage_x += 2;
+               if (stage->stage_x > al_get_bitmap_width(stage->stage_sprite) - 300)
+                  stage->stage_x -= 2;
+               else
+                  p1->x -= 5;
+            }
+         }
+         else if (p1->move == WALK_NEGATIVE && p1->pos_flag == 0 && p2->x < DISPLAY_WIDTH - 2.5*p2->w){
+            if (p2->x - p1->x < DISPLAY_WIDTH - 2.5*p1->w){
                stage->stage_x -= 2;
                if (stage->stage_x < 0)
                   stage->stage_x += 2;
+               else
+                  p2->x += 5;
+            }
+         }
+         else if (p2->move == WALK_NEGATIVE && p2->pos_flag == 0 && p1->x < DISPLAY_WIDTH - 2.5*p1->w){
+            if (p1->x - p2->x < DISPLAY_WIDTH - 2.5*p2->w){
+               stage->stage_x -= 2;
+               if (stage->stage_x < 0)
+                  stage->stage_x += 2;
+               else
+                  p1->x += 5;
+            }
          }
 
          /* ----------------------------
@@ -915,10 +1032,6 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
          move_shot(p2);
       }
 
-      /* Fim da Luta - Verifica se algum dos jogadores venceu 2 rounds
-       * ou também se o jogo quer ser fechado, tornando a flag de fim de jogo verdadeira */
-      if (rounds_p1 == 2 || rounds_p2 == 2) finished_game = true;
-
       if (close_game) break;
    }
 
@@ -932,6 +1045,7 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
    al_destroy_font(fight_font_48);
    al_destroy_font(fight_font_32);
 
+   al_destroy_bitmap(shadow);
    al_destroy_bitmap(transparency);
 
    return 1;

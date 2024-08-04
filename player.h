@@ -18,11 +18,11 @@
 #define DEFAULT_POW_POINTS 3
 #define STEP_FRONT         10
 #define STEP_BACK          5
-#define GRAVITY            9
+#define GRAVITY            10
 #define X_MIN              0
-#define X_MAX              DISPLAY_WIDTH - 200
+#define X_MAX              DISPLAY_WIDTH - 175
 #define Y_MAX              DISPLAY_HEIGHT - 300
-#define Y_MIN              Y_MAX - 250
+#define Y_MIN              Y_MAX - 350
 
 /* Define a estrutura "Player"
  * selected_char: Personagem escolhido pelo jogador
@@ -97,7 +97,7 @@ void update_player_pos_flags(Player* p1, Player* p2);
  * jogador.
  * Retorna true caso seja necessário resetar o frame de animação, e 
  * false caso contrário. */
-bool draw_sprite_player(Player *player, float* frame);
+void draw_sprite_player(Player *player);
 
 /* -------------------------------------------------------------------------- */
 

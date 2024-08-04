@@ -30,6 +30,10 @@ struct Sprite_st {
    ALLEGRO_BITMAP* walk_positive;
    ALLEGRO_BITMAP* walk_negative;
 
+   /* Vitória e Derrota */
+   ALLEGRO_BITMAP* victory;
+   ALLEGRO_BITMAP* defeat;
+
    float frame;
 };
 typedef struct Sprite_st Sprite;
