@@ -6,7 +6,16 @@
 
 #include "enums.h"
 
-/* Struct Sprite */
+/* ------------------
+ * Tipos e Estruturas
+ * ------------------ */
+/* Define a estrutura SPRITE
+ * > Bitmaps de ataque: attack_sp,
+ * attack_mp, attack_lp, attack_lp,
+ * attack_hk, attack_mk, attack_lk,
+ * > Bitmaps de movimento: jump, crouch,
+ * idle, walk_positive, walk_negative
+ * > Bitmaps de Fim de Jogo: victory, defeat */
 struct Sprite_st {
    /* Sprite Ataque ESPECIAL*/
    ALLEGRO_BITMAP* attack_sp;
@@ -35,20 +44,19 @@ struct Sprite_st {
    ALLEGRO_BITMAP* defeat;
 
    float frame;
+   int loop_count;
 };
 typedef struct Sprite_st Sprite;
 
-/* Funções da Biblioteca "sprite" */
-
-/* create_sprites:
- * Aloca estruturas bitmap para guardar cada sprite,
+/* ---------------------
+ * Funções da Biblioteca
+ * --------------------- */
+/* Aloca estruturas bitmap para guardar cada sprite,
  * dado um personagem fornecido como parâmetro. 
  * Retorna o ponteiro para estrutura. */
 Sprite* create_sprites(Character fighter_selected);
 
-/* destroy_sprites:
- * Destrói os bitmaps reservados para os sprites do
- * jogador. */
+/* Libera memória alocada por uma estrutura SPRITE. */
 void destroy_sprites(Sprite* sprites);
 
 #endif

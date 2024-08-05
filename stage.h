@@ -26,6 +26,11 @@
 #define STAGE_H_MARKET       209
 #define STAGE_N_FRAME_MARKET 12
 
+/* ------------------
+ * Tipos e Estruturas
+ * ------------------ */
+/* Define o Tipo Enumerável STAGE_NAME, que estabelece a 
+ * identificação de cada cenário disponível */
 typedef enum {
    AMAZON,
    CONSTRUCTION,
@@ -33,6 +38,11 @@ typedef enum {
    MARKET
 } Stage_Name;
 
+/* Define a estrutura STAGE 
+ * > Imagem do Cenário: stage_sprite
+ * > Coordenadas e Dimensões: stage_x, stage_w, stage_h
+ * > Número de Frames da Animação: stage_num_frame
+ * > Contador de Frame: stage_frame */
 typedef struct Stage {
    ALLEGRO_BITMAP* stage_sprite;
    int stage_x, stage_w, stage_h;
@@ -40,13 +50,18 @@ typedef struct Stage {
    float stage_frame;
 } Stage;
 
-/* Cria uma estrutura Cenário */
+/* ---------------------
+ * Funções da Biblioteca
+ * --------------------- */
+/* Aloca memória para uma estrutura CENÁRIO baseado em um nome
+ * de um cenário dado. */
 Stage* create_stage(Stage_Name stage_name);
 
-/* Destrói uma estrutura Cenário */
+/* Libera memória de uma estrutura CENÁRIO. */
 void destroy_stage(Stage* stage);
 
-/* Exibe na tela um Cenário dado */
+/* Exibe na tela uma estrutura CENÁRIO, em que as coordenadas (x, y) e
+ * dimensões (w, h) são do corte realizado na imagem do cenário. */
 void draw_stage(Stage* stage, float x, float y, float w, float h);
 
 #endif

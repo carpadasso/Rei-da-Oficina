@@ -61,6 +61,7 @@ Sprite* create_sprites(Character fighter_selected)
    }
    
    sprites->frame = 0.0;
+   sprites->loop_count = 0;
    
    return sprites;
 }

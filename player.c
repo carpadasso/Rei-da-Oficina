@@ -143,7 +143,7 @@ void update_player_movement(Player* p1, Player* p2)
       p1->move = CROUCH;
 
    /* Ataque Especial */
-   else if (p1->joystick->button_3)
+   else if (p1->joystick->button_3 && !p1->is_jumping && !p1->joystick->down)
       p1->move = ATTACK_SP;
    
    /* Ataques Padrão */
@@ -455,12 +455,20 @@ void execute_attack(Player* p1, Player* p2)
    if (p1->move == ATTACK_MP || p1->move == ATTACK_HP || p1->move == ATTACK_LP){
       if (is_area_colliding(p1->x_hurt, p1->y_hurt, ceil(p1->w_hurt*2.5), ceil(p1->h_hurt*2.5), 
                             p2->x_hit,  p2->y_hit,  ceil(p2->w_hit*2.5),  ceil(p2->h_hit*2.5)))
-         p2->hit_points -= 10;
+      {
+         if (p1->move == ATTACK_HP) p2->hit_points -= 10;
+         if (p1->move == ATTACK_MP) p2->hit_points -= 8;
+         if (p1->move == ATTACK_LP) p2->hit_points -= 6;
+      }
    }
    if (p1->move == ATTACK_MK || p1->move == ATTACK_HK || p1->move == ATTACK_LK){
       if (is_area_colliding(p1->x_hurt, p1->y_hurt, ceil(p1->w_hurt*2.5), ceil(p1->h_hurt*2.5), 
                             p2->x_hit,  p2->y_hit,  ceil(p2->w_hit*2.5),  ceil(p2->h_hit*2.5)))
-         p2->hit_points -= 5;
+      {
+         if (p1->move == ATTACK_HK) p2->hit_points -= 12;
+         if (p1->move == ATTACK_MK) p2->hit_points -= 10;
+         if (p1->move == ATTACK_LK) p2->hit_points -= 5;
+      }
    }
 }
 
@@ -484,8 +492,7 @@ void draw_sprite_player(Player* p)
    unsigned short gap;
    int flag = p->pos_flag;
 
-   if   (p->pos_flag == 0) gap = 0;
-   else                    gap = 70;
+   gap = (p->pos_flag == 0) ? 0 : 70;
 
    /* -------------------
     * Exibição de Sprites
@@ -523,33 +530,75 @@ void draw_sprite_player(Player* p)
       /* ---------------------------
        * Exibição de Ataque Especial
        * --------------------------- */
-      else if (p->move == ATTACK_SP){
+      else if (p->move == ATTACK_SP && p->sprites->loop_count < 2){
+         if (p->sprites->frame <= 2) p->sprites->frame += 0.15;
+         else {
+            p->sprites->frame = 0;
+            if (p->sprites->loop_count < 2) p->sprites->loop_count++;
+         }
+
          al_draw_scaled_bitmap(p->sprites->attack_sp, 290, 0, 115, 95, p->x - gap, p->y, 115*2.5, 95*2.5, flag);
       }
 
       /* ---------------------------
        * Exibição de Ataques de SOCO
        * --------------------------- */
-      else if ((p->move == ATTACK_HP || p->enable_atk_p == 1) && p->is_jumping){
+      else if ((p->move == ATTACK_HP || p->enable_atk_p == 1) && p->is_jumping && p->sprites->loop_count < 2){
+         if (p->sprites->frame <= 2) p->sprites->frame += 0.15;
+         else {
+            p->sprites->frame = 0;
+            if (p->sprites->loop_count < 2) p->sprites->loop_count++;
+         }
+
          al_draw_scaled_bitmap(p->sprites->attack_hp, 150, 0, 100, 115, p->x - gap, p->y, 100*2.5, 115*2.5, flag);
       }
-      else if ((p->move == ATTACK_MP || p->enable_atk_p == 1)){
+      else if ((p->move == ATTACK_MP || p->enable_atk_p == 1) && p->sprites->loop_count < 2){
+         if (p->sprites->frame <= 2) p->sprites->frame += 0.15;
+         else {
+            p->sprites->frame = 0;
+            if (p->sprites->loop_count < 2) p->sprites->loop_count++;
+         }
+
          al_draw_scaled_bitmap(p->sprites->attack_mp, 70, 0, 110, 95, p->x - gap, p->y, 110*2.5, 95*2.5, flag);
       }
-      else if ((p->move == ATTACK_LP || p->enable_atk_p == 1)){
+      else if ((p->move == ATTACK_LP || p->enable_atk_p == 1) && p->sprites->loop_count < 2){
+         if (p->sprites->frame <= 2) p->sprites->frame += 0.15;
+         else {
+            p->sprites->frame = 0;
+            if (p->sprites->loop_count < 2) p->sprites->loop_count++;
+         }
+
          al_draw_scaled_bitmap(p->sprites->attack_lp, 80, 0, 105, 95, p->x - gap, p->y, 105*2.5, 95*2.5, flag);
       }
 
       /* ----------------------------
        * Exibição de Ataques de CHUTE
        * ---------------------------- */
-      else if ((p->move == ATTACK_HK || p->enable_atk_k == 1) && p->is_jumping){
+      else if ((p->move == ATTACK_HK || p->enable_atk_k == 1) && p->is_jumping && p->sprites->loop_count < 2){
+         if (p->sprites->frame <= 2) p->sprites->frame += 0.15;
+         else {
+            p->sprites->frame = 0;
+            if (p->sprites->loop_count < 2) p->sprites->loop_count++;
+         }
+
          al_draw_scaled_bitmap(p->sprites->attack_hk, 70, 0, 85, 115, p->x - gap, p->y, 85*2.5, 115*2.5, flag);
       }
-      else if ((p->move == ATTACK_MK || p->enable_atk_k == 1)){
+      else if ((p->move == ATTACK_MK || p->enable_atk_k == 1) && p->sprites->loop_count < 2){
+         if (p->sprites->frame <= 2) p->sprites->frame += 0.15;
+         else {
+            p->sprites->frame = 0;
+            if (p->sprites->loop_count < 2) p->sprites->loop_count++;
+         }
+
          al_draw_scaled_bitmap(p->sprites->attack_mk, 140, 0, 90, 95, p->x - gap, p->y, 90*2.5, 95*2.5, flag);
       }
-      else if ((p->move == ATTACK_LK || p->enable_atk_k == 1)){
+      else if ((p->move == ATTACK_LK || p->enable_atk_k == 1) && p->sprites->loop_count < 2){
+         if (p->sprites->frame <= 2) p->sprites->frame += 0.15;
+         else {
+            p->sprites->frame = 0;
+            if (p->sprites->loop_count < 2) p->sprites->loop_count++;
+         }
+
          al_draw_scaled_bitmap(p->sprites->attack_lk, 190, 0, 150, 95, p->x - gap, p->y, 150*2.5, 95*2.5, flag);
       }
 
@@ -600,33 +649,75 @@ void draw_sprite_player(Player* p)
       /* ---------------------------
        * Exibição de Ataque Especial
        * --------------------------- */
-      else if (p->move == ATTACK_SP){
+      else if (p->move == ATTACK_SP && p->sprites->loop_count < 2){
+         if (p->sprites->frame <= 2) p->sprites->frame += 0.15;
+         else {
+            p->sprites->frame = 0;
+            if (p->sprites->loop_count < 2) p->sprites->loop_count++;
+         }
+
          al_draw_scaled_bitmap(p->sprites->attack_sp, 290, 0, 115, 95, p->x - gap, p->y, 115*2.5, 95*2.5, flag);
       }
 
       /* ---------------------------
        * Exibição de Ataques de SOCO
        * --------------------------- */
-      else if ((p->move == ATTACK_HP || p->enable_atk_p == 1) && p->is_jumping){
+      else if ((p->move == ATTACK_HP || p->enable_atk_p == 1) && p->is_jumping && p->sprites->loop_count < 2){
+         if (p->sprites->frame <= 2) p->sprites->frame += 0.15;
+         else {
+            p->sprites->frame = 0;
+            if (p->sprites->loop_count < 2) p->sprites->loop_count++;
+         }
+
          al_draw_scaled_bitmap(p->sprites->attack_hp, 150, 0, 100, 115, p->x - gap, p->y, 100*2.5, 115*2.5, flag);
       }
-      else if ((p->move == ATTACK_MP || p->enable_atk_p == 1)){
+      else if ((p->move == ATTACK_MP || p->enable_atk_p == 1) && p->sprites->loop_count < 2){
+         if (p->sprites->frame <= 2) p->sprites->frame += 0.15;
+         else {
+            p->sprites->frame = 0;
+            if (p->sprites->loop_count < 2) p->sprites->loop_count++;
+         }
+
          al_draw_scaled_bitmap(p->sprites->attack_mp, 70, 0, 105, 95, p->x - gap, p->y, 110*2.5, 95*2.5, flag);
       }
-      else if ((p->move == ATTACK_LP || p->enable_atk_p == 1)){
+      else if ((p->move == ATTACK_LP || p->enable_atk_p == 1) && p->sprites->loop_count < 2){
+         if (p->sprites->frame <= 2) p->sprites->frame += 0.15;
+         else {
+            p->sprites->frame = 0;
+            if (p->sprites->loop_count < 2) p->sprites->loop_count++;
+         }
+
          al_draw_scaled_bitmap(p->sprites->attack_lp, 80, 0, 105, 95, p->x - gap, p->y, 105*2.5, 95*2.5, flag);
       }
 
       /* ----------------------------
        * Exibição de Ataques de CHUTE
        * ---------------------------- */
-      else if ((p->move == ATTACK_HK || p->enable_atk_k == 1) && p->is_jumping){
+      else if ((p->move == ATTACK_HK || p->enable_atk_k == 1) && p->is_jumping && p->sprites->loop_count < 2){
+         if (p->sprites->frame <= 2) p->sprites->frame += 0.15;
+         else {
+            p->sprites->frame = 0;
+            if (p->sprites->loop_count < 2) p->sprites->loop_count++;
+         }
+
          al_draw_scaled_bitmap(p->sprites->attack_hk, 70, 0, 85, 115, p->x - gap, p->y, 85*2.5, 115*2.5, flag);
       }
-      else if ((p->move == ATTACK_MK || p->enable_atk_k == 1)){
+      else if ((p->move == ATTACK_MK || p->enable_atk_k == 1) && p->sprites->loop_count < 2){
+         if (p->sprites->frame <= 2) p->sprites->frame += 0.15;
+         else {
+            p->sprites->frame = 0;
+            if (p->sprites->loop_count < 2) p->sprites->loop_count++;
+         }
+
          al_draw_scaled_bitmap(p->sprites->attack_mk, 130, 0, 90, 95, p->x - gap, p->y, 90*2.5, 95*2.5, flag);
       }
-      else if ((p->move == ATTACK_LK || p->enable_atk_k == 1)){
+      else if ((p->move == ATTACK_LK || p->enable_atk_k == 1) && p->sprites->loop_count < 2){
+         if (p->sprites->frame <= 2) p->sprites->frame += 0.15;
+         else {
+            p->sprites->frame = 0;
+            if (p->sprites->loop_count < 2) p->sprites->loop_count++;
+         }
+
          al_draw_scaled_bitmap(p->sprites->attack_lk, 190, 0, 150, 95, p->x - gap, p->y, 150*2.5, 95*2.5, flag);
       }
 

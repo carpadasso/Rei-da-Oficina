@@ -1,6 +1,9 @@
-/* King of Workshop (pt-br: O Rei da Oficina) */
-/* Arquivo principal */
-/* Executará os eventos e as inicializações necessárias */
+/* -----------------------------------------------------
+ * Trabalho da Disciplina Programação de Computadores II
+ * Nome do Projeto: Street Fighter
+ * Discente: Leonardo Amorim Carpwiski
+ * Período: 2024-1
+ * ----------------------------------------------------- */
 
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_font.h>
@@ -23,61 +26,68 @@
 /* --------------------------------
  * Funções Secundárias / Auxiliares
  * -------------------------------- */
-void inverte_string(char str[], int length)
+/* Função que inverte uma string */
+void inverte_string(char s[], int len)
 {
-    int start = 0;
-    int end = length - 1;
-    while (start < end) {
-        char temp = str[start];
-        str[start] = str[end];
-        str[end] = temp;
-        end--;
-        start++;
+    int inicio = 0;
+    int fim = len - 1;
+
+    while (inicio < fim) {
+        char temp = s[inicio];
+        s[inicio] = s[fim];
+        s[fim] = temp;
+        fim--;
+        inicio++;
     }
 }
 
+/* Função que recebe um inteiro e um buffer;
+ * Escreve no buffer o inteiro em formato de string,
+ * ou seja, no fim das contas, transforma um inteiro
+ * em uma string */
 char* citoa(int num, char* str, int base)
 {
     int i = 0;
     bool is_negative = false;
  
-    /* Handle 0 explicitly, otherwise empty string is
-     * printed for 0 */
+    /* Caso o número seja 0, 
+     * retorna a string vazia */
     if (num == 0) {
         str[i++] = '0';
         str[i] = '\0';
         return str;
     }
  
-    // In standard itoa(), negative numbers are handled
-    // only with base 10. Otherwise numbers are
-    // considered unsigned.
+    /* Considera números negativos apenas
+     * para base númerica == 10 */
     if (num < 0 && base == 10) {
         is_negative = true;
         num = -num;
     }
  
-    // Process individual digits
     while (num != 0) {
         int rem = num % base;
         str[i++] = (rem > 9) ? (rem - 10) + 'a' : rem + '0';
         num = num / base;
     }
- 
-    // If number is negative, append '-'
+
+    /* Coloca o sinal de negativo caso o número
+     * seja negativo */
     if (is_negative)
         str[i++] = '-';
+
+    str[i] = '\0';
  
-    str[i] = '\0'; // Append string terminator
- 
-    // Reverse the string
+    /* Inverte a string, fazendo o */
     inverte_string(str, i);
  
     return str;
 }
 
-void destroy_game_elements(ALLEGRO_TIMER *t, ALLEGRO_EVENT_QUEUE *ev_q, 
-                              ALLEGRO_DISPLAY *d, ALLEGRO_BITMAP *icon)
+/* Função que libera memória das estruturas de jogo,
+ * no caso, o timer, a fila de eventos, o display e
+ * o ícone da janela */
+void destroy_game_elements(ALLEGRO_TIMER *t, ALLEGRO_EVENT_QUEUE *ev_q, ALLEGRO_DISPLAY *d, ALLEGRO_BITMAP *icon)
 {
    al_destroy_timer(t);
    al_destroy_event_queue(ev_q);
@@ -85,6 +95,8 @@ void destroy_game_elements(ALLEGRO_TIMER *t, ALLEGRO_EVENT_QUEUE *ev_q,
    al_destroy_bitmap(icon);
 }
 
+/* Reinicia os atributos dos jogadores e o temporizador,
+ * ou seja, reinicia a instância de round */
 void restart_round(Player* p1, Player* p2, float* clk_timer)
 {
    /* ----------------------------
@@ -100,13 +112,14 @@ void restart_round(Player* p1, Player* p2, float* clk_timer)
    p2->w = p2->w_hit = p2->w_hurt = 70;
    p2->h = p2->h_hit = p2->h_hurt = 95;
 
-   p1->move = IDLE;
-   p2->move = IDLE;
+   p1->move = p2->move = IDLE;
 
    /* --------------------------
     * Reinicialização das Flags
     * -------------------------- */
    p1->sprites->frame = p2->sprites->frame = 0.0;
+   p1->sprites->loop_count = p2->sprites->loop_count = 0;
+
    p1->is_jumping = p1->is_falling = false;
    p1->enable_atk_p = p1->enable_atk_k = p1->enable_jump = 0;
 
@@ -128,10 +141,12 @@ void restart_round(Player* p1, Player* p2, float* clk_timer)
 /* ---------------------------
  * Funções de Execução de Fase 
  * --------------------------- */
+/* Função que executa a fase de Menu Principal */
 int execMainMenu(ALLEGRO_EVENT_QUEUE *event_queue)
 {
    ALLEGRO_EVENT event;
-   bool closeGame = false;
+
+   bool close_game = false;
 
    /* Carrega as imagens do Menu */
    ALLEGRO_BITMAP* logo_menu = al_load_bitmap("./assets/main_menu/logo.png");
@@ -157,7 +172,7 @@ int execMainMenu(ALLEGRO_EVENT_QUEUE *event_queue)
       /* Evento 01:
        * Fechar o Jogo */
       if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE){
-         closeGame = true;
+         close_game = true;
          break;
       }
       /* Evento 02:
@@ -196,10 +211,11 @@ int execMainMenu(ALLEGRO_EVENT_QUEUE *event_queue)
    al_destroy_bitmap(arrow);
    al_destroy_sample(menu_music);
 
-   if (closeGame || option == 1) return 1;
+   if (close_game || option == 1) return 1;
    return 0;
 }
 
+/* Função que executa a fase de Tela de Seleção */
 int execSelectScreen(ALLEGRO_EVENT_QUEUE *event_queue, Character *char_p1, Character *char_p2, Stage** stage)
 {
    /* Variável de captura de evento
@@ -442,6 +458,7 @@ int execSelectScreen(ALLEGRO_EVENT_QUEUE *event_queue, Character *char_p1, Chara
    return close_game;
 }
 
+/* Função que executa a fase de Luta */
 int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p2, Stage* stage)
 {
    /* Variável de captura de evento
@@ -691,15 +708,15 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
             if (ev.type == ALLEGRO_EVENT_KEY_UP){
                /* Flags de Enable do Jogador 01 */
                if      (ev.keyboard.keycode == ALLEGRO_KEY_W) p1->enable_jump   = 0;
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_Z) p1->enable_atk_p  = 0;
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_X) p1->enable_atk_k  = 0;
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_C) p1->enable_atk_sp = 0;
+               else if (ev.keyboard.keycode == ALLEGRO_KEY_Z) { p1->enable_atk_p  = 0; p1->sprites->loop_count = 0; }
+               else if (ev.keyboard.keycode == ALLEGRO_KEY_X) { p1->enable_atk_k  = 0; p1->sprites->loop_count = 0; }
+               else if (ev.keyboard.keycode == ALLEGRO_KEY_C) { p1->enable_atk_sp = 0; p1->sprites->loop_count = 0; }
 
                /* Flags de Enable do Jogador 02 */
                if      (ev.keyboard.keycode == ALLEGRO_KEY_UP) p2->enable_jump   = 0;
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_K)  p2->enable_atk_p  = 0;
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_L)  p2->enable_atk_k  = 0;
-               else if (ev.keyboard.keycode == ALLEGRO_KEY_M)  p2->enable_atk_sp = 0;
+               else if (ev.keyboard.keycode == ALLEGRO_KEY_K)  { p2->enable_atk_p  = 0; p2->sprites->loop_count = 0; }
+               else if (ev.keyboard.keycode == ALLEGRO_KEY_L)  { p2->enable_atk_k  = 0; p2->sprites->loop_count = 0; }
+               else if (ev.keyboard.keycode == ALLEGRO_KEY_M)  { p2->enable_atk_sp = 0; p2->sprites->loop_count = 0; }
             }
          }
          
@@ -863,22 +880,21 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
             /* ---------------------
              * Sprites dos Jogadores
              * --------------------- */
-
-            /* Hitbox: P1 */
+            /* Hitboxes e Hurtboxes dos Jogadores 
+             * Utilizada apenas para debugging. */
+            /*
             al_draw_rectangle(p1->x_hit, p1->y_hit, p1->x_hit+(p1->w_hit*2.5), 
                               p1->y_hit+(p1->h_hit*2.5), al_color_name("blue"), 1.0);
 
-            /* Hitbox: P2 */
             al_draw_rectangle(p2->x_hit-0.5, p2->y_hit-0.5, p2->x_hit+(p2->w_hit*2.5)+0.5, 
                               p2->y_hit+(p2->h_hit*2.5)+0.5, al_color_name("blue"), 1.0);
 
-            /* Hurtbox: P1 */
             al_draw_rectangle(p1->x_hurt-0.5, p1->y_hurt-0.5, p1->x_hurt+(p1->w_hurt*2.5)+0.5, 
                               p1->y_hurt+(p1->h_hurt*2.5)+0.5, al_color_name("red"), 1.0);
 
-            /* Hurtbox: P2 */
             al_draw_rectangle(p2->x_hurt-0.5, p2->y_hurt-0.5, p2->x_hurt+(p2->w_hurt*2.5)+0.5, 
                               p2->y_hurt+(p2->h_hurt*2.5)+0.5, al_color_name("red"), 1.0);
+            */
             
             /* Sombras */
             al_draw_scaled_bitmap(shadow, 0, 0, 82, 14, p1->x - 20, Y_MAX + 210, 2.5*82, 2.5*14, p1->pos_flag);
@@ -919,13 +935,6 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
             /* --------------------
              * Exibição de DISPAROS
              * -------------------- */
-            if (p1->shot)
-               al_draw_rectangle(p1->shot->x_hurt-0.5, p1->shot->y_hurt-0.5, p1->shot->x_hurt+(p1->shot->w_hurt*2.5)+0.5, 
-                                 p1->shot->y_hurt+(p1->shot->h_hurt*2.5)+0.5, al_color_name("green"), 1.0);
-            if (p2->shot)
-               al_draw_rectangle(p2->shot->x_hurt-0.5, p2->shot->y_hurt-0.5, p2->shot->x_hurt+(p2->shot->w_hurt*2.5)+0.5, 
-                                 p2->shot->y_hurt+(p2->shot->h_hurt*2.5)+0.5, al_color_name("green"), 1.0);
-
             show_shot(p1);
             show_shot(p2);
 
@@ -1018,9 +1027,9 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
 
          /* Executa o ATAQUE ESPECIAL
           * (nesse caso, Hadouken para ambos) */
-         if (p1->power_points > 0 && p1->shot == NULL && p1->enable_atk_sp == 1) 
+         if (p1->power_points > 0 && p1->shot == NULL && p1->move == ATTACK_SP && p1->enable_atk_sp == 1) 
             { spawn_player_shot(p1); p1->power_points--; }
-         if (p2->power_points > 0 && p2->shot == NULL && p2->enable_atk_sp == 1)
+         if (p2->power_points > 0 && p2->shot == NULL && p2->move == ATTACK_SP && p2->enable_atk_sp == 1)
             { spawn_player_shot(p2); p2->power_points--; }
 
          if (verify_damage_shot(p1->shot, p2) || (p1->shot && (p1->shot->x < 0 || p1->shot->x > DISPLAY_WIDTH - p1->shot->w)))
