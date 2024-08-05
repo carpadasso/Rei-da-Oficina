@@ -1003,8 +1003,8 @@ int execFight(ALLEGRO_EVENT_QUEUE *ev_queue, Character char_p1, Character char_p
           * ---------------------- */
 
          /* Modificando a variável 'move' dos jogadores */
-         update_player_movement(p1, p2);
-         update_player_movement(p2, p1);
+         if (!finished_game) update_player_movement(p1, p2);
+         if (!finished_game) update_player_movement(p2, p1);
          
          /* Modifica a Flag de Pulo */
          if (p1->move == JUMP && !p1->is_jumping) p1->is_jumping = true;
